@@ -63,3 +63,24 @@ token_t *parse_integer(const char *input) {
   }
   return make_token(TOKEN_INT, start, input - start);
 }
+
+token_t *parse_string(const char *input) {
+  if (input == NULL || *input != '"') {
+    return NULL;
+  }
+
+  const char *start = input++;
+  int escaped = 0;
+
+  while (*input != '\0') {
+    if (*input == '"' && !escaped) {
+      return make_token(TOKEN_STR, start, input - start + 1);
+    } else if (*input == '\\' && !escaped) {
+      escaped = 1;
+    } else {
+      escaped = 0;
+    }
+    input++;
+  }
+  return NULL;
+}

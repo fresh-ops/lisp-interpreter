@@ -35,3 +35,11 @@ token_t *make_token(enum token_type type, const char *start, size_t length);
  * @return token_t* New token if number found, NULL otherwise
  */
 token_t *parse_integer(const char *input);
+
+/**
+ * @brief Parses a string literal from input
+ *
+ * @param input Input string (must not be NULL)
+ * @return token_t* New toke if string literal found, NULL otherwise
+ */
+token_t *parse_string(const char *input);
