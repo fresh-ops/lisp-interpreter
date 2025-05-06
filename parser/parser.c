@@ -84,3 +84,15 @@ token_t *parse_string(const char *input) {
   }
   return NULL;
 }
+
+token_t *parse_identifier(const char *input) {
+  if (input == NULL || !isalpha((unsigned char)*input)) {
+    return NULL;
+  }
+
+  const char *start = input++;
+  while (*input != '\0' && isalnum((unsigned char)*input)) {
+    input++;
+  }
+  return make_token(TOKEN_ID, start, input - start);
+}

@@ -1,7 +1,7 @@
 #pragma once
 #include <stdlib.h>
 
-enum token_type { TOKEN_INT, TOKEN_STR, TOKEN_EXPR };
+enum token_type { TOKEN_INT, TOKEN_STR, TOKEN_ID };
 
 typedef struct token {
   enum token_type type;
@@ -43,3 +43,11 @@ token_t *parse_integer(const char *input);
  * @return token_t* New toke if string literal found, NULL otherwise
  */
 token_t *parse_string(const char *input);
+
+/**
+ * @brief Parses an identifier from input
+ *
+ * @param input Input string (must not be NULL)
+ * @return token_t* New token if identifier found, NULL otherwise
+ */
+token_t *parse_identifier(const char *input);
