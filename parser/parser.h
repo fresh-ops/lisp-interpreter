@@ -5,7 +5,7 @@ enum token_type { TOKEN_INT, TOKEN_STR, TOKEN_ID };
 
 typedef struct token {
   enum token_type type;
-  char *start;
+  const char *start;
   size_t length;
 } token_t;
 
@@ -51,3 +51,11 @@ token_t *parse_string(const char *input);
  * @return token_t* New token if identifier found, NULL otherwise
  */
 token_t *parse_identifier(const char *input);
+
+/**
+ * @brief Parses an atom(string, integer number or identifier) from input
+ *
+ * @param input Input string (must not be NULL)
+ * @return token_t* New token if an atom found, NULL otherwise
+ */
+token_t *parse_atom(const char *input);

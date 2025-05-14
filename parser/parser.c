@@ -96,3 +96,15 @@ token_t *parse_identifier(const char *input) {
   }
   return make_token(TOKEN_ID, start, input - start);
 }
+
+token_t *parse_atom(const char *input) {
+  token_t *result = parse_identifier(input);
+  if (result != NULL) {
+    return result;
+  }
+  result = parse_integer(input);
+  if (result != NULL) {
+    return result;
+  }
+  return parse_string(input);
+}
