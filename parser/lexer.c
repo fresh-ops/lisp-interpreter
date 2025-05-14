@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "lexer.h"
 
 #include <ctype.h>
 #include <stdbool.h>
