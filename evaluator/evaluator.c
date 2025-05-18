@@ -29,12 +29,22 @@ static value_t *evaluate_value(const as_tree_t *tree) {
     return NULL;
 }
 
-value_t *evaluate(const as_tree_t *tree) {
+value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
+  char *name = extract_token(tree->token);
+  value_t *result = look_up_in(scope, name);
+  free(name);
+  return result;
+}
+
+value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
     if (tree == NULL) {
       return NULL;
     }
     if (tree->type == VALUE) {
       return evaluate_value(tree);
+    }
+    if (tree->type == NAME) {
+      return evaluate_name(tree, scope);
     }
     return NULL;
 }
