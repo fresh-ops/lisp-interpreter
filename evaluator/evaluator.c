@@ -6,7 +6,7 @@
 static integer_t *extract_integer(const as_tree_t *tree) {
   char *value = extract_token(tree->token);
   integer_t *result = (integer_t *)calloc(1, sizeof(integer_t));
-  *result = (integer_t){.t = INT, .value = atoll(value)};
+  *result = (integer_t){.type = INT, .value = atoll(value)};
   free(value);
   return result;
 }
@@ -14,7 +14,7 @@ static integer_t *extract_integer(const as_tree_t *tree) {
 static string_t *extract_string(const as_tree_t *tree) {
   string_t *result = (string_t *)calloc(1, sizeof(string_t));
   *result = (string_t){
-      .t = STR, .length = tree->length, .value = extract_token(tree->token)};
+      .type = STR, .length = tree->length, .value = extract_token(tree->token)};
   return result;
 }
 

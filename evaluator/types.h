@@ -1,18 +1,20 @@
+#pragma once
+
 #include <stdlib.h>
 
 enum type { INT, STR };
 
 typedef struct value {
-  enum type t;
+  enum type type;
 } value_t;
 
 typedef struct integer {
-  enum type t;
+  enum type type;
   long long value;
 } integer_t;
 
 typedef struct string {
-  enum type t;
+  enum type type;
   size_t length;
   char *value;
 } string_t;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../models/astree.h"
 #include "types.h"
 
