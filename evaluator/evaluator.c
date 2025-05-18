@@ -1,7 +1,8 @@
 #include "evaluator.h"
-#include "../parser/parser.h"
 
 #include <string.h>
+
+#include "../parser/parser.h"
 
 static integer_t *extract_integer(const as_tree_t *tree) {
   char *value = extract_token(tree->token);
@@ -19,32 +20,34 @@ static string_t *extract_string(const as_tree_t *tree) {
 }
 
 static value_t *evaluate_value(const as_tree_t *tree) {
-    switch (tree->token->type)
-    {
+  switch (tree->token->type) {
     case TOKEN_INT:
       return (value_t *)extract_integer(tree);
     case TOKEN_STR:
       return (value_t *)extract_string(tree);
-    }
-    return NULL;
+  }
+  return NULL;
 }
 
 value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
   value_t *result = look_up_in(scope, name);
   free(name);
-  return result;
+  if (result->type != VAR) {
+    return NULL;
+  }
+  return ((variable_t *)result)->data;
 }
 
 value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
-    if (tree == NULL) {
-      return NULL;
-    }
-    if (tree->type == VALUE) {
-      return evaluate_value(tree);
-    }
-    if (tree->type == NAME) {
-      return evaluate_name(tree, scope);
-    }
+  if (tree == NULL) {
     return NULL;
+  }
+  if (tree->type == VALUE) {
+    return evaluate_value(tree);
+  }
+  if (tree->type == NAME) {
+    return evaluate_name(tree, scope);
+  }
+  return NULL;
 }
