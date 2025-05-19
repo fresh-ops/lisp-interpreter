@@ -9,15 +9,17 @@ static void destroy_string(string_t *value) {
   free(value);
 }
 
-static void destroy_variable(variable_t *value) { 
-    destroy_value(value->data);
-    free(value->name);
-    free(value);
+static void destroy_variable(variable_t *value) {
+  destroy_value(value->data);
+  free(value->name);
+  free(value);
 }
 
 void destroy_value(value_t *value) {
-    switch (value->type)
-    {
+  if (value == NULL) {
+    return;
+  }
+  switch (value->type) {
     case INT:
       destroy_integer((integer_t *)value);
       break;
@@ -29,5 +31,5 @@ void destroy_value(value_t *value) {
       break;
     default:
       break;
-    }
+  }
 }

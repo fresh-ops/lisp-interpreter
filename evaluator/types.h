@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-enum type { INT, STR, VAR };
+enum type { INT, STR, VAR, CORE };
 
 typedef struct value {
   enum type type;
@@ -24,5 +24,12 @@ typedef struct variable {
   char *name;
   value_t *data;
 } variable_t;
+
+typedef struct core_function {
+  enum type type;
+  char *name;
+  size_t args_cnt;
+  value_t *(*body)(value_t **);
+} core_function_t;
 
 void destroy_value(value_t *value);

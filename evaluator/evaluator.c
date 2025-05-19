@@ -33,10 +33,38 @@ value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
   value_t *result = look_up_in(scope, name);
   free(name);
+  if (result == NULL) {
+    return NULL;
+  }
   if (result->type != VAR) {
     return NULL;
   }
   return ((variable_t *)result)->data;
+}
+
+value_t *evaluate_core_function(core_function_t *func, const as_tree_t *tree,
+                                scope_t *scope) {
+  value_t **args = (value_t **)calloc(tree->cnt + 1, sizeof(value_t *));
+  for (size_t i = 0; i < tree->cnt; i++) {
+    args[i] = evaluate(&tree->children[i], scope);
+    if (args[i] == NULL) {
+      free(args);
+      return NULL;
+    }
+  }
+  value_t *result = func->body(args);
+  free(args);
+  return result;
+}
+
+value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
+  char *name = extract_token(tree->token);
+  value_t *symbol = look_up_in(scope, name);
+  free(name);
+  if (symbol->type == CORE) {
+    return evaluate_core_function((core_function_t *)symbol, tree, scope);
+  }
+  return NULL;
 }
 
 value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
@@ -48,6 +76,9 @@ value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
   }
   if (tree->type == NAME) {
     return evaluate_name(tree, scope);
+  }
+  if (tree->type == EXPRESSION) {
+    return evaluate_expression(tree, scope);
   }
   return NULL;
 }
