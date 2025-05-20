@@ -57,12 +57,48 @@ value_t *evaluate_core_function(core_function_t *func, const as_tree_t *tree,
   return result;
 }
 
+void create_function(const as_tree_t *tree, scope_t *scope) {
+  function_t *func = (function_t *)calloc(1, sizeof(function_t));
+  *func = (function_t){
+      .type = FUNC,
+      .name = extract_token(tree->children[0].token),
+      .args_cnt = tree->children[1].cnt + 1,
+      .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
+      .body = &tree->children[2]};
+  func->args[0] = extract_token(tree->children[1].token);
+  for (size_t i = 1; i < func->args_cnt; i++) {
+    func->args[i] = extract_token(tree->children[1].children[i - 1].token);
+  }
+  add_symbol(scope, (value_t *)func);
+}
+
+value_t *evaluate_function(function_t *func, const as_tree_t *tree,
+                           scope_t *scope) {
+  scope_t *inner = make_scope(scope);
+  for (size_t i = 0; i < func->args_cnt; i++) {
+    variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
+    *var = (variable_t){.type = VAR,
+                        .name = func->args[i],
+                        .data = evaluate(&tree->children[i], scope)};
+    add_symbol(inner, (value_t *)var);
+  }
+  return evaluate(func->body, inner);
+}
+
 value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
+  if (strcmp(name, "defun") == 0) {
+    free(name);
+    create_function(tree, scope);
+    return NULL;
+  }
   value_t *symbol = look_up_in(scope, name);
   free(name);
   if (symbol->type == CORE) {
     return evaluate_core_function((core_function_t *)symbol, tree, scope);
+  }
+  if (symbol->type == FUNC) {
+    return evaluate_function((function_t *)symbol, tree, scope);
   }
   return NULL;
 }

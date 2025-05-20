@@ -2,7 +2,9 @@
 
 #include <stdlib.h>
 
-enum type { INT, STR, VAR, CORE };
+#include "../models/astree.h"
+
+enum type { INT, STR, VAR, CORE, FUNC };
 
 typedef struct value {
   enum type type;
@@ -31,5 +33,13 @@ typedef struct core_function {
   size_t args_cnt;
   value_t *(*body)(value_t **);
 } core_function_t;
+
+typedef struct function {
+  enum type type;
+  char *name;
+  size_t args_cnt;
+  char **args;
+  as_tree_t *body;
+} function_t;
 
 void destroy_value(value_t *value);
