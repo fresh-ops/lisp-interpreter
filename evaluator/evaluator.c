@@ -57,6 +57,14 @@ value_t *evaluate_core_function(core_function_t *func, const as_tree_t *tree,
   return result;
 }
 
+void create_variable(const as_tree_t *tree, scope_t *scope) {
+  variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
+  *var = (variable_t){.type = VAR,
+                      .name = extract_token(tree->children[0].token),
+                      .data = evaluate(&tree->children[1], scope)};
+  add_symbol(scope, (value_t *)var);
+}
+
 void create_function(const as_tree_t *tree, scope_t *scope) {
   function_t *func = (function_t *)calloc(1, sizeof(function_t));
   *func = (function_t){
@@ -90,6 +98,10 @@ value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   if (strcmp(name, "defun") == 0) {
     free(name);
     create_function(tree, scope);
+    return NULL;
+  } else if (strcmp(name, "defvar") == 0) {
+    free(name);
+    create_variable(tree, scope);
     return NULL;
   }
   value_t *symbol = look_up_in(scope, name);
