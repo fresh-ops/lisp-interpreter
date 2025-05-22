@@ -65,6 +65,33 @@ void create_variable(const as_tree_t *tree, scope_t *scope) {
   add_symbol(scope, (value_t *)var);
 }
 
+as_tree_t *copy_tree(as_tree_t *tree) {
+  if (tree == NULL) return NULL;
+
+  as_tree_t *copy = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+  memcpy(copy, tree, sizeof(as_tree_t));
+
+  if (tree->token != NULL) {
+    copy->token = (token_t *)calloc(1, sizeof(token_t));
+    copy->token->type = tree->token->type;
+    copy->token->length = tree->token->length;
+    copy->token->start = strndup(tree->token->start, tree->token->length);
+  } else {
+    copy->token = NULL;
+  }
+
+  if (tree->cap > 0 && tree->cnt > 0) {
+    copy->children = (as_tree_t *)calloc(tree->cap, sizeof(as_tree_t));
+    for (size_t i = 0; i < tree->cnt; i++) {
+      as_tree_t *child = copy_tree(&tree->children[i]);
+      memcpy(&copy->children[i], child, sizeof(as_tree_t));
+      free(child);
+    }
+  }
+
+  return copy;
+}
+
 void create_function(const as_tree_t *tree, scope_t *scope) {
   function_t *func = (function_t *)calloc(1, sizeof(function_t));
   *func = (function_t){
@@ -72,7 +99,7 @@ void create_function(const as_tree_t *tree, scope_t *scope) {
       .name = extract_token(tree->children[0].token),
       .args_cnt = tree->children[1].cnt + 1,
       .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
-      .body = &tree->children[2]};
+      .body = copy_tree(&tree->children[2])};
   func->args[0] = extract_token(tree->children[1].token);
   for (size_t i = 1; i < func->args_cnt; i++) {
     func->args[i] = extract_token(tree->children[1].children[i - 1].token);

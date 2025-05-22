@@ -14,6 +14,7 @@ static void destroy_tree(as_tree_t *tree, int is_allocated) {
     free(tree);
   }
   if (tree->token != NULL) {
+    free(tree->token->start);
     free(tree->token);
   }
 }
