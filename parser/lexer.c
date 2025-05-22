@@ -1,7 +1,6 @@
 #include "lexer.h"
 
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,6 +57,11 @@ token_t *parse_integer(const char *input) {
   while (isdigit((unsigned char)*input)) {
     input++;
   }
+
+  if (*input != ' ' && *input != ')' && *input != '\0') {
+    return NULL;
+  }
+
   if (input - start == has_sign) {
     return NULL;
   }
@@ -69,12 +73,12 @@ token_t *parse_string(const char *input) {
     return NULL;
   }
 
-  const char *start = input++;
+  const char *start = ++input;
   int escaped = 0;
 
   while (*input != '\0') {
     if (*input == '"' && !escaped) {
-      return make_token(TOKEN_STR, start, input - start + 1);
+      return make_token(TOKEN_STR, start, input - start);
     } else if (*input == '\\' && !escaped) {
       escaped = 1;
     } else {
@@ -94,6 +98,11 @@ token_t *parse_identifier(const char *input) {
   while (*input != '\0' && isalnum((unsigned char)*input)) {
     input++;
   }
+
+  if (*input != ' ' && *input != ')' && *input != '\0') {
+    return NULL;
+  }
+
   return make_token(TOKEN_ID, start, input - start);
 }
 
