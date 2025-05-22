@@ -6,12 +6,20 @@
 
 static as_tree_t *parse_expression(const char *input);
 
-static void destroy_tree(as_tree_t *tree) {
+static void destroy_tree(as_tree_t *tree, int is_allocated) {
   if (tree == NULL) {
     return;
   }
+  for (size_t i = 0; i < tree->cnt; i++) {
+    destroy_tree(tree->children + i, 0);
+  }
   free(tree->children);
-  free(tree);
+  if (is_allocated) {
+    free(tree);
+  }
+  if (tree->token != NULL) {
+    free(tree->token);
+  }
 }
 
 static size_t skip_whitespaces(const char *input) {
@@ -33,8 +41,16 @@ as_tree_t *parse(const char *input) {
   }
 
   as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+
+  if (tree == NULL) {
+    free(token);
+    return NULL;
+  }
+
   tree->token = token;
-  tree->length = token->length;
+  tree->length = (token->type == TOKEN_STR)
+                     ? token->length + 2  // длинна строки не учитывает ковычки
+                     : token->length;
   tree->type = (token->type == TOKEN_ID) ? NAME : VALUE;
 
   return tree;
@@ -49,6 +65,10 @@ static as_tree_t *parse_expression(const char *input) {
   }
 
   as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+  if (tree == NULL) {
+    free(token);
+    return NULL;
+  }
   *tree = (as_tree_t){.type = EXPRESSION,
                       .token = token,
                       .cap = 2,
@@ -67,7 +87,7 @@ static as_tree_t *parse_expression(const char *input) {
 
     as_tree_t *child = parse(input);
     if (child == NULL) {
-      destroy_tree(tree);
+      destroy_tree(tree, 1);
       return NULL;
     }
 
@@ -77,7 +97,7 @@ static as_tree_t *parse_expression(const char *input) {
     free(child);
   }
   if (*input != ')') {
-    destroy_tree(tree);
+    destroy_tree(tree, 1);
     return NULL;
   }
   tree->length = input - start + 1;
