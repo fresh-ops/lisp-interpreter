@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "../parser/parser.h"
+#include "parser.h"
 
 static integer_t *extract_integer(const as_tree_t *tree) {
   char *value = extract_token(tree->token);

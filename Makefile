@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Iparser -Ievaluator
+CFLAGS = -Wall -Wextra -Iparser -Ievaluator -Imodels -g
 AR = ar
 ARFLAGS = rcs
 

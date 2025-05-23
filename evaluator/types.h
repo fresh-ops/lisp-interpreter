@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "../models/astree.h"
+#include "astree.h"
 
 enum type { INT, STR, VAR, CORE, FUNC };
 

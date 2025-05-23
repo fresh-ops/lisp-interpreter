@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../parser/lexer.h"
+#include "lexer.h"
 
 enum construction { EXPRESSION, VALUE, NAME };
 
