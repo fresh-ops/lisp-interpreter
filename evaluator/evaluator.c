@@ -39,7 +39,28 @@ value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
   if (result->type != VAR) {
     return NULL;
   }
-  return ((variable_t *)result)->data;
+  size_t size;
+  switch (((variable_t *)result)->data->type) {
+    case INT:
+      size = sizeof(integer_t);
+      break;
+    case STR:
+      size = sizeof(string_t);
+      break;
+    case VAR:
+      size = sizeof(variable_t);
+      break;
+    case CORE:
+      size = sizeof(core_function_t);
+      break;
+    case FUNC:
+    default:
+      size = sizeof(function_t);
+      break;
+  }
+  value_t *data = (value_t *)malloc(size);
+  memcpy(data, ((variable_t *)result)->data, size);
+  return data;
 }
 
 value_t *evaluate_core_function(core_function_t *func, const as_tree_t *tree,
@@ -48,11 +69,17 @@ value_t *evaluate_core_function(core_function_t *func, const as_tree_t *tree,
   for (size_t i = 0; i < tree->cnt; i++) {
     args[i] = evaluate(&tree->children[i], scope);
     if (args[i] == NULL) {
+      for (size_t j = 0; j < i; i++) {
+        free(args[j]);
+      }
       free(args);
       return NULL;
     }
   }
   value_t *result = func->body(args);
+  for (size_t i = 0; i < tree->cnt + 1; i++) {
+    free(args[i]);
+  }
   free(args);
   return result;
 }
@@ -113,11 +140,13 @@ value_t *evaluate_function(function_t *func, const as_tree_t *tree,
   for (size_t i = 0; i < func->args_cnt; i++) {
     variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
     *var = (variable_t){.type = VAR,
-                        .name = func->args[i],
-                        .data = evaluate(&tree->children[i], scope)};
+                        .name = strndup(func->args[i], strlen(func->args[i])),
+                        .data = evaluate(&tree->children[i], inner)};
     add_symbol(inner, (value_t *)var);
   }
-  return evaluate(func->body, inner);
+  value_t *result = evaluate(func->body, inner);
+  destroy_scope(inner);
+  return result;
 }
 
 value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
