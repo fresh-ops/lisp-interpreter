@@ -2,23 +2,6 @@
 
 #include <stdlib.h>
 
-static void destroy_tree(as_tree_t *tree, int is_allocated) {
-  if (tree == NULL) {
-    return;
-  }
-  for (size_t i = 0; i < tree->cnt; i++) {
-    destroy_tree(tree->children + i, 0);
-  }
-  free(tree->children);
-  if (is_allocated) {
-    free(tree);
-  }
-  if (tree->token != NULL) {
-    free(tree->token->start);
-    free(tree->token);
-  }
-}
-
 static void destroy_integer(integer_t *value) { free(value); }
 
 static void destroy_string(string_t *value) {
@@ -43,7 +26,7 @@ static void destroy_function(function_t *value) {
   }
   free(value->args);
   free(value->name);
-  destroy_tree(value->body, 1);
+  destroy_tree(value->body, 1, 1);
   free(value);
 }
 

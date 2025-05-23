@@ -92,33 +92,6 @@ void create_variable(const as_tree_t *tree, scope_t *scope) {
   add_symbol(scope, (value_t *)var);
 }
 
-as_tree_t *copy_tree(as_tree_t *tree) {
-  if (tree == NULL) return NULL;
-
-  as_tree_t *copy = (as_tree_t *)calloc(1, sizeof(as_tree_t));
-  memcpy(copy, tree, sizeof(as_tree_t));
-
-  if (tree->token != NULL) {
-    copy->token = (token_t *)calloc(1, sizeof(token_t));
-    copy->token->type = tree->token->type;
-    copy->token->length = tree->token->length;
-    copy->token->start = strndup(tree->token->start, tree->token->length);
-  } else {
-    copy->token = NULL;
-  }
-
-  if (tree->cap > 0 && tree->cnt > 0) {
-    copy->children = (as_tree_t *)calloc(tree->cap, sizeof(as_tree_t));
-    for (size_t i = 0; i < tree->cnt; i++) {
-      as_tree_t *child = copy_tree(&tree->children[i]);
-      memcpy(&copy->children[i], child, sizeof(as_tree_t));
-      free(child);
-    }
-  }
-
-  return copy;
-}
-
 void create_function(const as_tree_t *tree, scope_t *scope) {
   function_t *func = (function_t *)calloc(1, sizeof(function_t));
   *func = (function_t){

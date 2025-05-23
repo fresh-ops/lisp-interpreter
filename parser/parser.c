@@ -6,22 +6,6 @@
 
 static as_tree_t *parse_expression(const char *input);
 
-static void destroy_tree(as_tree_t *tree, int is_allocated) {
-  if (tree == NULL) {
-    return;
-  }
-  for (size_t i = 0; i < tree->cnt; i++) {
-    destroy_tree(tree->children + i, 0);
-  }
-  free(tree->children);
-  if (is_allocated) {
-    free(tree);
-  }
-  if (tree->token != NULL) {
-    free(tree->token);
-  }
-}
-
 static size_t skip_whitespaces(const char *input) {
   const char *start = input;
   while (*input == ' ') {
@@ -87,7 +71,7 @@ static as_tree_t *parse_expression(const char *input) {
 
     as_tree_t *child = parse(input);
     if (child == NULL) {
-      destroy_tree(tree, 1);
+      destroy_tree(tree, 1, 0);
       return NULL;
     }
 
@@ -97,7 +81,7 @@ static as_tree_t *parse_expression(const char *input) {
     free(child);
   }
   if (*input != ')') {
-    destroy_tree(tree, 1);
+    destroy_tree(tree, 1, 0);
     return NULL;
   }
   tree->length = input - start + 1;
