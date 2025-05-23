@@ -25,6 +25,8 @@ static value_t *evaluate_value(const as_tree_t *tree) {
       return (value_t *)extract_integer(tree);
     case TOKEN_STR:
       return (value_t *)extract_string(tree);
+    default:
+      break;
   }
   return NULL;
 }
@@ -135,6 +137,9 @@ value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   }
   value_t *symbol = look_up_in(scope, name);
   free(name);
+  if (symbol == NULL) {
+    return NULL;
+  }
   if (symbol->type == CORE) {
     return evaluate_core_function((core_function_t *)symbol, tree, scope);
   }
