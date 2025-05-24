@@ -1,5 +1,5 @@
 #pragma once
-#include "../models/astree.h"
+#include "astree.h"
 
 /**
  * @brief Parses input into an abstract syntax tree
