@@ -4,7 +4,7 @@
 
 #include "astree.h"
 
-enum type { INT, STR, VAR, CORE, FUNC };
+enum type { INT, STR, VAR, CORE, FUNC, LIST };
 
 typedef struct value {
   enum type type;
@@ -41,5 +41,11 @@ typedef struct function {
   char **args;
   as_tree_t *body;
 } function_t;
+
+typedef struct list {
+  enum type type;
+  value_t *data;
+  struct list *next;
+} list_t;
 
 void destroy_value(value_t *value);

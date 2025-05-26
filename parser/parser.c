@@ -14,11 +14,33 @@ static size_t skip_whitespaces(const char *input) {
   return input - start;
 }
 
-as_tree_t *parse(const char *input) {
+static as_tree_t *parse_symbol(const char *input, int quoted) {
   if (*input == '(') {
-    return parse_expression(input);
+    const char *start = input++ - 1;
+    as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+    *tree = (as_tree_t){.type = QUOTED,
+                        .cap = 4,
+                        .cnt = 0,
+                        .children = (as_tree_t *)calloc(4, sizeof(as_tree_t))};
+    while (*input != ')' && *input != '\0') {
+      as_tree_t *child = parse_symbol(input, quoted);
+      if (child == NULL) {
+        destroy_tree(tree, 1, 0);
+        return NULL;
+      }
+      child->length--;
+      memcpy(&tree->children[tree->cnt++], child, sizeof(as_tree_t));
+      input += child->length;
+      input += skip_whitespaces(input);
+      free(child);
+    }
+    if (*input != ')') {
+      destroy_tree(tree, 1, 0);
+      return NULL;
+    }
+    tree->length = input - start + 1;
+    return tree;
   }
-
   token_t *token = parse_atom(input);
   if (token == NULL) {
     return NULL;
@@ -36,8 +58,24 @@ as_tree_t *parse(const char *input) {
                      ? token->length + 2  // длинна строки не учитывает ковычки
                      : token->length;
   tree->type = (token->type == TOKEN_ID) ? NAME : VALUE;
+  if (quoted) {
+    tree->type = QUOTED;
+    tree->length++;
+  }
 
   return tree;
+}
+
+as_tree_t *parse(const char *input) {
+  if (*input == '(') {
+    return parse_expression(input);
+  }
+  int quoted = 0;
+  if (*input == '\'') {
+    input++;
+    quoted = 1;
+  }
+  return parse_symbol(input, quoted);
 }
 
 static as_tree_t *parse_expression(const char *input) {

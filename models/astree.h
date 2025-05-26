@@ -2,7 +2,7 @@
 
 #include "lexer.h"
 
-enum construction { EXPRESSION, VALUE, NAME };
+enum construction { EXPRESSION, VALUE, NAME, QUOTED };
 
 typedef struct as_tree {
   enum construction type;

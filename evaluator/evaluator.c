@@ -1,5 +1,6 @@
 #include "evaluator.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "parser.h"
@@ -149,6 +150,44 @@ static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   return NULL;
 }
 
+static value_t *evaluate_quoted(const as_tree_t *tree, scope_t *scope);
+
+static value_t *evaluate_list(const as_tree_t *tree, scope_t *scope) {
+  list_t *start = (list_t *)calloc(1, sizeof(list_t));
+  start->type = LIST;
+  list_t *list = start;
+  for (size_t i = 0; i < tree->cnt; i++) {
+    list->data = evaluate_quoted(&tree->children[i], scope);
+    if (i + 1 < tree->cnt) {
+      list->next = (list_t *)calloc(1, sizeof(list_t));
+      list = list->next;
+      list->type = LIST;
+    }
+  }
+  return (value_t *)start;
+}
+
+static value_t *evaluate_quoted(const as_tree_t *tree, scope_t *scope) {
+  if (tree->token == NULL) {
+    return evaluate_list(tree, scope);
+  }
+  switch (tree->token->type) {
+    case TOKEN_INT:
+      return (value_t *)extract_integer(tree);
+    case TOKEN_STR:
+      return (value_t *)extract_string(tree);
+    case TOKEN_ID:
+      char *name = extract_token(tree->token);
+      // printf("%s\n", name);
+      value_t *result = look_up_in(scope, name);
+      free(name);
+      return result;
+    default:
+      break;
+  }
+  return NULL;
+}
+
 value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
   if (tree == NULL) {
     return NULL;
@@ -161,6 +200,9 @@ value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
   }
   if (tree->type == EXPRESSION) {
     return evaluate_expression(tree, scope);
+  }
+  if (tree->type == QUOTED) {
+    return evaluate_quoted(tree, scope);
   }
   return NULL;
 }

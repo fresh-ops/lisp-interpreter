@@ -30,6 +30,15 @@ static void destroy_function(function_t *value) {
   free(value);
 }
 
+static void destroy_list(list_t *value) {
+  if (value == NULL) {
+    return;
+  }
+  destroy_value(value->data);
+  destroy_list(value->next);
+  free(value);
+}
+
 void destroy_value(value_t *value) {
   if (value == NULL) {
     return;
@@ -49,6 +58,9 @@ void destroy_value(value_t *value) {
       break;
     case FUNC:
       destroy_function((function_t *)value);
+      break;
+    case LIST:
+      destroy_list((list_t *)value);
       break;
     default:
       break;
