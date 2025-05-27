@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core.h"
 #include "parser.h"
 
 static integer_t *extract_integer(const as_tree_t *tree) {
@@ -42,28 +43,7 @@ static value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
   if (result->type != VAR) {
     return NULL;
   }
-  size_t size;
-  switch (((variable_t *)result)->data->type) {
-    case INT:
-      size = sizeof(integer_t);
-      break;
-    case STR:
-      size = sizeof(string_t);
-      break;
-    case VAR:
-      size = sizeof(variable_t);
-      break;
-    case CORE:
-      size = sizeof(core_function_t);
-      break;
-    case FUNC:
-    default:
-      size = sizeof(function_t);
-      break;
-  }
-  value_t *data = (value_t *)malloc(size);
-  memcpy(data, ((variable_t *)result)->data, size);
-  return data;
+  return copy_value(((variable_t *)result)->data);
 }
 
 static value_t *evaluate_core_function(core_function_t *func,
@@ -79,7 +59,10 @@ static value_t *evaluate_core_function(core_function_t *func,
       return NULL;
     }
   }
+
+  set_scope(scope);
   value_t *result = func->body(args);
+  set_scope(NULL);
   for (size_t i = 0; i < tree->cnt + 1; i++) {
     free(args[i]);
   }
@@ -146,10 +129,11 @@ static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
     return NULL;
   }
   value_t *symbol = look_up_in(scope, name);
-  free(name);
   if (symbol == NULL) {
+    printf("No such symbol %s\n", name);
     return NULL;
   }
+  free(name);
   if (symbol->type == CORE) {
     return evaluate_core_function((core_function_t *)symbol, tree, scope);
   }

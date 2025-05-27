@@ -1,3 +1,5 @@
+#pragma once
+
 #include "types.h"
 
 typedef struct scope {
@@ -13,7 +15,7 @@ void destroy_scope(scope_t *scope);
 
 /**
  * @brief Searchs for name in the passed scope and the outer one
- * 
+ *
  * @param scope The scope to search in
  * @param name The identifier to search
  * @return value_t* Corresponding value or NULL if there is no such
