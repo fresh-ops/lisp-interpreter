@@ -49,3 +49,5 @@ typedef struct list {
 } list_t;
 
 void destroy_value(value_t *value);
+
+value_t *copy_value(value_t *value);

@@ -66,3 +66,77 @@ void destroy_value(value_t *value) {
       break;
   }
 }
+
+static value_t *copy_integer(integer_t *value) {
+  integer_t *copy = (integer_t *)calloc(1, sizeof(integer_t));
+  memcpy(copy, value, sizeof(integer_t));
+  return (value_t *)copy;
+}
+
+static value_t *copy_string(string_t *value) {
+  string_t *copy = (string_t *)calloc(1, sizeof(string_t));
+  memcpy(copy, value, sizeof(string_t));
+  copy->value = strndup(value->value, value->length);
+  return (value_t *)copy;
+}
+
+static value_t *copy_variable(variable_t *value) {
+  variable_t *copy = (variable_t *)calloc(1, sizeof(variable_t));
+  copy->type = VAR;
+  copy->name = strdup(value->name);
+  copy->data = copy_value(value->data);
+  return (value_t *)copy;
+}
+
+static value_t *copy_core_function(core_function_t *value) {
+  core_function_t *copy = (core_function_t *)calloc(1, sizeof(core_function_t));
+  memcpy(copy, value, sizeof(core_function_t));
+  copy->name = strdup(value->name);
+  return (value_t *)copy;
+}
+
+static value_t *copy_function(function_t *value) {
+  function_t *copy = (function_t *)calloc(1, sizeof(function_t));
+  copy->type = FUNC;
+  copy->name = strdup(value->name);
+  copy->args_cnt = value->args_cnt;
+  copy->args = (char **)calloc(copy->args_cnt, sizeof(char *));
+  for (size_t i = 0; i < copy->args_cnt; i++) {
+    copy->args[i] = strdup(value->args[i]);
+  }
+  copy->body = copy_tree(value->body);
+  return (value_t *)copy;
+}
+
+static value_t *copy_list(list_t *value) {
+  if (value == NULL) {
+    return NULL;
+  }
+  list_t *copy = (list_t *)calloc(1, sizeof(list_t));
+  copy->type = LIST;
+  copy->data = copy_value(value->data);
+  copy->next = copy_list(value->next);
+  return (value_t *)copy;
+}
+
+value_t *copy_value(value_t *value) {
+  if (value == NULL) {
+    return NULL;
+  }
+  switch (value->type) {
+    case INT:
+      return copy_integer((integer_t *)value);
+    case STR:
+      return copy_string((string_t *)value);
+    case VAR:
+      return copy_variable((variable_t *)value);
+    case CORE:
+      return copy_core_function((core_function_t *)value);
+    case FUNC:
+      return copy_function((function_t *)value);
+    case LIST:
+      return copy_list((list_t *)value);
+    default:
+      return NULL;
+  }
+}
