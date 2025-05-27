@@ -105,6 +105,21 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
   return symbol;
 }
 
+static value_t *create_lambda(const as_tree_t *tree, scope_t *scope) {
+  function_t *func = (function_t *)calloc(1, sizeof(function_t));
+  *func = (function_t){
+      .type = FUNC,
+      .args_cnt = tree->children[0].cnt + 1,
+      .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
+      .closure = (void *)copy_scope(scope),
+      .body = copy_tree(&tree->children[1])};
+  func->args[0] = extract_token(tree->children[0].token);
+  for (size_t i = 1; i < func->args_cnt; i++) {
+    func->args[i] = extract_token(tree->children[0].children[i - 1].token);
+  }
+  return func;
+}
+
 static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
                                   scope_t *scope) {
   scope_t *inner = make_scope(scope);
@@ -130,6 +145,9 @@ static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
     free(name);
     create_variable(tree, scope);
     return NULL;
+  } else if (strcmp(name, "lambda") == 0) {
+    free(name);
+    return create_lambda(tree, scope);
   }
   value_t *symbol = look_up_in(scope, name);
   if (symbol == NULL) {
