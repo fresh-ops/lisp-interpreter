@@ -85,6 +85,7 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
       .name = extract_token(tree->children[0].token),
       .args_cnt = tree->children[1].cnt + 1,
       .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
+      .closure = (void *)copy_scope(scope),
       .body = copy_tree(&tree->children[2])};
   function_t *symbol = (function_t *)calloc(1, sizeof(function_t));
   *symbol = (function_t){
@@ -92,6 +93,7 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
       .name = extract_token(tree->children[0].token),
       .args_cnt = tree->children[1].cnt + 1,
       .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
+      .closure = (void *)copy_scope(scope),
       .body = copy_tree(&tree->children[2])};
   func->args[0] = extract_token(tree->children[1].token);
   symbol->args[0] = extract_token(tree->children[1].token);
@@ -106,6 +108,7 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
 static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
                                   scope_t *scope) {
   scope_t *inner = make_scope(scope);
+  inner->closure = func->closure;
   for (size_t i = 0; i < func->args_cnt; i++) {
     variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
     *var = (variable_t){.type = VAR,

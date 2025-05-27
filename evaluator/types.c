@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "scope.h"
+
 static void destroy_integer(integer_t *value) { free(value); }
 
 static void destroy_string(string_t *value) {
@@ -26,6 +28,7 @@ static void destroy_function(function_t *value) {
   }
   free(value->args);
   free(value->name);
+  destroy_scope_rec((scope_t *)value->closure);
   destroy_tree(value->body, 1, 1);
   free(value);
 }

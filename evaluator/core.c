@@ -53,6 +53,7 @@ value_t *funcall(value_t **args) {
       scope_t *outer = get_scope();
       scope_t *scope = make_scope(outer);
       function_t *func = (function_t *)args[0];
+      scope->closure = func->closure;
       for (size_t i = 0; i < func->args_cnt; i++) {
         variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
         *var =
@@ -98,6 +99,7 @@ value_t *mapcar(value_t **args) {
       scope_t *scope = get_scope();
       while (list != NULL) {
         scope_t *inner = make_scope(scope);
+        inner->closure = func->closure;
         variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
         *var =
             (variable_t){.type = VAR,

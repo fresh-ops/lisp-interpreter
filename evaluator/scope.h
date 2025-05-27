@@ -4,6 +4,7 @@
 
 typedef struct scope {
   struct scope *outer;
+  struct scope *closure;
   size_t cap;
   size_t cnt;
   value_t **table;
@@ -12,6 +13,10 @@ typedef struct scope {
 scope_t *make_scope(scope_t *outer);
 
 void destroy_scope(scope_t *scope);
+
+void destroy_scope_rec(scope_t *scope);
+
+scope_t *copy_scope(scope_t *scope);
 
 /**
  * @brief Searchs for name in the passed scope and the outer one

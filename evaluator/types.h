@@ -39,6 +39,7 @@ typedef struct function {
   char *name;
   size_t args_cnt;
   char **args;
+  void *closure;
   as_tree_t *body;
 } function_t;
 
