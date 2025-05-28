@@ -105,7 +105,7 @@ static value_t *copy_core_function(core_function_t *value) {
 static value_t *copy_function(function_t *value) {
   function_t *copy = (function_t *)calloc(1, sizeof(function_t));
   copy->type = FUNC;
-  copy->name = strdup(value->name);
+  copy->name = (value->name != NULL) ? strdup(value->name) : NULL;
   copy->args_cnt = value->args_cnt;
   copy->args = (char **)calloc(copy->args_cnt, sizeof(char *));
   for (size_t i = 0; i < copy->args_cnt; i++) {

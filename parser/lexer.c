@@ -1,6 +1,7 @@
 #include "lexer.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -51,6 +52,10 @@ token_t *parse_integer(const char *input) {
   }
 
   if (*input == '0' && isdigit((unsigned char)*(input + 1))) {
+    fprintf(stderr,
+            "Parser error: Leading zeros are forbiden\nError occured while "
+            "parsing \"%s\"\n",
+            start);
     return NULL;
   }
 
@@ -59,6 +64,12 @@ token_t *parse_integer(const char *input) {
   }
 
   if (*input != ' ' && *input != ')' && *input != '\0') {
+    if (input != start) {
+      fprintf(stderr,
+              "Parser error: Unexpected character \'%c\'. The number can "
+              "only contain digits\nError occured while parsing \"%s\"\n",
+              *input, start);
+    }
     return NULL;
   }
 
@@ -86,6 +97,10 @@ token_t *parse_string(const char *input) {
     }
     input++;
   }
+  fprintf(stderr,
+          "Parser error: Unexpected end of line. Expected \'\"\'\nError "
+          "occured while parsing \"%s\"\n",
+          start - 1);
   return NULL;
 }
 
@@ -100,6 +115,12 @@ token_t *parse_identifier(const char *input) {
   }
 
   if (*input != ' ' && *input != ')' && *input != '\0') {
+    fprintf(
+        stderr,
+        "Parser error: Unexpected character \'%c\'. The identifier can "
+        "only contain letters and digits\nError occured while parsing \"%s\"\n",
+        *input, start);
+
     return NULL;
   }
 
