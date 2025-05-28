@@ -37,7 +37,7 @@ static value_t *evaluate_value(const as_tree_t *tree) {
 static value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
   value_t *result = look_up_in(scope, name);
-  if (result == NULL && result->type != VAR) {
+  if (result == NULL || result->type != VAR) {
     fprintf(stderr, "Evaluator error: variable %s has no value\n", name);
     free(name);
     return NULL;

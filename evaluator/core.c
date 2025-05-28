@@ -17,7 +17,9 @@ value_t *sum(value_t **args) {
 
   for (size_t i = 0; args[i] != NULL; i++) {
     if (args[i]->type != INT) {
-      printf("Argument must be int\n");
+      fprintf(stderr,
+              "Evaluator error: Type mismatch. arguments of function sum must "
+              "be integer\n");
       free(result);
       return NULL;
     }
@@ -29,6 +31,9 @@ value_t *sum(value_t **args) {
 
 value_t *sub(value_t **args) {
   if (args[0]->type != INT) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. arguments of function sub must be "
+            "integer\n");
     return NULL;
   }
 
@@ -37,6 +42,9 @@ value_t *sub(value_t **args) {
 
   for (size_t i = 1; args[i] != NULL; i++) {
     if (args[i]->type != INT) {
+      fprintf(stderr,
+              "Evaluator error: Type mismatch. arguments of function sub must "
+              "be integer\n");
       free(result);
       return NULL;
     }
@@ -47,8 +55,21 @@ value_t *sub(value_t **args) {
 }
 
 value_t *gt(value_t **args) {
+  if (args[0]->type != INT) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. arguments of function gt must be "
+            "integer\n");
+    return NULL;
+  }
   integer_t *last = (integer_t *)args[0];
   for (size_t i = 1; args[i] != NULL; i++) {
+    if (args[i]->type != INT) {
+      fprintf(
+          stderr,
+          "Evaluator error: Type mismatch. arguments of function gt must be "
+          "integer\n");
+      return NULL;
+    }
     if (last->value <= ((integer_t *)args[i])->value) {
       return make_nil();
     }
@@ -58,8 +79,21 @@ value_t *gt(value_t **args) {
 }
 
 value_t *lt(value_t **args) {
+  if (args[0]->type != INT) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. arguments of function lt must be "
+            "integer\n");
+    return NULL;
+  }
   integer_t *last = (integer_t *)args[0];
   for (size_t i = 1; args[i] != NULL; i++) {
+    if (args[i]->type != INT) {
+      fprintf(
+          stderr,
+          "Evaluator error: Type mismatch. arguments of function lt must be "
+          "integer\n");
+      return NULL;
+    }
     if (last->value >= ((integer_t *)args[i])->value) {
       return make_nil();
     }
@@ -69,8 +103,21 @@ value_t *lt(value_t **args) {
 }
 
 value_t *ge(value_t **args) {
+  if (args[0]->type != INT) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. arguments of function ge must be "
+            "integer\n");
+    return NULL;
+  }
   integer_t *last = (integer_t *)args[0];
   for (size_t i = 1; args[i] != NULL; i++) {
+    if (args[i]->type != INT) {
+      fprintf(
+          stderr,
+          "Evaluator error: Type mismatch. arguments of function ge must be "
+          "integer\n");
+      return NULL;
+    }
     if (last->value < ((integer_t *)args[i])->value) {
       return make_nil();
     }
@@ -80,8 +127,21 @@ value_t *ge(value_t **args) {
 }
 
 value_t *le(value_t **args) {
+  if (args[0]->type != INT) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. arguments of function le must be "
+            "integer\n");
+    return NULL;
+  }
   integer_t *last = (integer_t *)args[0];
   for (size_t i = 1; args[i] != NULL; i++) {
+    if (args[i]->type != INT) {
+      fprintf(
+          stderr,
+          "Evaluator error: Type mismatch. arguments of function le must be "
+          "integer\n");
+      return NULL;
+    }
     if (last->value > ((integer_t *)args[i])->value) {
       return make_nil();
     }
@@ -139,12 +199,20 @@ value_t *funcall(value_t **args) {
       destroy_scope(scope);
       return result;
     default:
+      fprintf(stderr,
+              "Evaluator error: Type mismatch. The first argument of function "
+              "funcall must be "
+              "a function reference\n");
       return NULL;
   }
 }
 
 value_t *mapcar(value_t **args) {
   if (args[1]->type != LIST) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. The second argument of function "
+            "mapcar must be "
+            "a list\n");
     return NULL;
   }
   list_t *list = args[1];
@@ -190,6 +258,10 @@ value_t *mapcar(value_t **args) {
       args[1] = list_start;
       break;
     default:
+      fprintf(stderr,
+              "Evaluator error: Type mismatch. The first argument of function "
+              "mapcar must be "
+              "a function reference\n");
       destroy_value(result);
       return NULL;
   }
