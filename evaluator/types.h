@@ -53,6 +53,8 @@ void destroy_value(value_t *value);
 
 value_t *copy_value(value_t *value);
 
+int compare_value(value_t *a, value_t *b);
+
 int is_nil(value_t *value);
 
 value_t *make_nil();
