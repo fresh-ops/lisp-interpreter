@@ -1,6 +1,7 @@
 #include "core.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "evaluator.h"
 
@@ -43,6 +44,50 @@ value_t *sub(value_t **args) {
   }
 
   return (value_t *)result;
+}
+
+value_t *gt(value_t **args) {
+  integer_t *last = (integer_t *)args[0];
+  for (size_t i = 1; args[i] != NULL; i++) {
+    if (last->value <= ((integer_t *)args[i])->value) {
+      return make_nil();
+    }
+    last = (integer_t *)args[i];
+  }
+  return make_true();
+}
+
+value_t *lt(value_t **args) {
+  integer_t *last = (integer_t *)args[0];
+  for (size_t i = 1; args[i] != NULL; i++) {
+    if (last->value >= ((integer_t *)args[i])->value) {
+      return make_nil();
+    }
+    last = (integer_t *)args[i];
+  }
+  return make_true();
+}
+
+value_t *ge(value_t **args) {
+  integer_t *last = (integer_t *)args[0];
+  for (size_t i = 1; args[i] != NULL; i++) {
+    if (last->value < ((integer_t *)args[i])->value) {
+      return make_nil();
+    }
+    last = (integer_t *)args[i];
+  }
+  return make_true();
+}
+
+value_t *le(value_t **args) {
+  integer_t *last = (integer_t *)args[0];
+  for (size_t i = 1; args[i] != NULL; i++) {
+    if (last->value > ((integer_t *)args[i])->value) {
+      return make_nil();
+    }
+    last = (integer_t *)args[i];
+  }
+  return make_true();
 }
 
 value_t *funcall(value_t **args) {
