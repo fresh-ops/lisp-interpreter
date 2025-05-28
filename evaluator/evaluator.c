@@ -136,8 +136,22 @@ static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
   return result;
 }
 
+static value_t *evaluate_if(const as_tree_t *tree, scope_t *scope) {
+  value_t *cond = evaluate(&tree->children[0], scope);
+  if (is_nil(cond)) {
+    destroy_value(cond);
+    return evaluate(&tree->children[2], scope);
+  }
+  destroy_value(cond);
+  return evaluate(&tree->children[1], scope);
+}
+
 static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
+  if (strcmp(name, "if") == 0) {
+    free(name);
+    return evaluate_if(tree, scope);
+  }
   if (strcmp(name, "defun") == 0) {
     free(name);
     return create_function(tree, scope);
