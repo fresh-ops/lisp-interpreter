@@ -70,6 +70,24 @@ as_tree_t *parse(const char *input) {
   if (*input == '(') {
     return parse_expression(input);
   }
+  if (*input == '#' && *(input + 1) == '\'') {
+    token_t *token = parse_identifier(input + 2);
+    if (token == NULL) {
+      return NULL;
+    }
+
+    as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+
+    if (tree == NULL) {
+      free(token);
+      return NULL;
+    }
+
+    tree->token = token;
+    tree->type = REFERENCE;
+    tree->length = token->length + 2;
+    return tree;
+  }
   int quoted = 0;
   if (*input == '\'') {
     input++;

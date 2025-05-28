@@ -19,6 +19,25 @@ void destroy_scope(scope_t *scope) {
   free(scope);
 }
 
+void destroy_scope_rec(scope_t *scope) {
+  if (scope == NULL) {
+    return;
+  }
+  destroy_scope_rec(scope->outer);
+  destroy_scope(scope);
+}
+
+scope_t *copy_scope(scope_t *scope) {
+  if (scope == NULL) {
+    return NULL;
+  }
+  scope_t *copy = make_scope(copy_scope(scope->outer));
+  for (size_t i = 0; i < scope->cnt; i++) {
+    add_symbol(copy, copy_value(scope->table[i]));
+  }
+  return copy;
+}
+
 value_t *look_up_in(scope_t *scope, char *name) {
   if (scope == NULL) {
     return NULL;
@@ -29,7 +48,11 @@ value_t *look_up_in(scope_t *scope, char *name) {
       return scope->table[i];
     }
   }
-  return look_up_in(scope->outer, name);
+  value_t *result = look_up_in(scope->outer, name);
+  if (result != NULL) {
+    return result;
+  }
+  return look_up_in(scope->closure, name);
 }
 
 void add_symbol(scope_t *scope, value_t *var) {

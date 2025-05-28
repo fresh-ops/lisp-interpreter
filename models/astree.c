@@ -8,6 +8,7 @@ as_tree_t *copy_tree(const as_tree_t *tree) {
 
   as_tree_t *copy = (as_tree_t *)malloc(sizeof(as_tree_t));
   memcpy(copy, tree, sizeof(as_tree_t));
+  copy->children = NULL;
 
   if (tree->token != NULL) {
     copy->token = (token_t *)calloc(1, sizeof(token_t));

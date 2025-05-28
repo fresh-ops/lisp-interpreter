@@ -39,6 +39,7 @@ typedef struct function {
   char *name;
   size_t args_cnt;
   char **args;
+  void *closure;
   as_tree_t *body;
 } function_t;
 
@@ -49,3 +50,5 @@ typedef struct list {
 } list_t;
 
 void destroy_value(value_t *value);
+
+value_t *copy_value(value_t *value);
