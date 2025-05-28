@@ -111,7 +111,12 @@ as_tree_t *parse(const char *input) {
 
 static as_tree_t *parse_expression(const char *input) {
   const char *start = input++;
-
+  if (*input == ')') {
+    as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+    tree->length = 2;
+    tree->type = QUOTED;
+    return tree;
+  }
   token_t *token = parse_identifier(input);
   if (token == NULL) {
     return NULL;

@@ -30,17 +30,16 @@ static value_t *evaluate_value(const as_tree_t *tree) {
     default:
       break;
   }
+  fprintf(stderr, "Evaluator error: Unresolved value type\n");
   return NULL;
 }
 
 static value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
   value_t *result = look_up_in(scope, name);
-  free(name);
-  if (result == NULL) {
-    return NULL;
-  }
-  if (result->type != VAR) {
+  if (result == NULL && result->type != VAR) {
+    fprintf(stderr, "Evaluator error: variable %s has no value\n", name);
+    free(name);
     return NULL;
   }
   return copy_value(((variable_t *)result)->data);
@@ -48,6 +47,12 @@ static value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
 
 static value_t *evaluate_core_function(core_function_t *func,
                                        const as_tree_t *tree, scope_t *scope) {
+  if (func->args_cnt > tree->cnt) {
+    fprintf(stderr,
+            "Evaluator error: Too few arguments passed to function %s\n",
+            func->name);
+    return NULL;
+  }
   value_t **args = (value_t **)calloc(tree->cnt + 1, sizeof(value_t *));
   for (size_t i = 0; i < tree->cnt; i++) {
     args[i] = evaluate(&tree->children[i], scope);
@@ -71,6 +76,26 @@ static value_t *evaluate_core_function(core_function_t *func,
 }
 
 static void create_variable(const as_tree_t *tree, scope_t *scope) {
+  if (tree->cnt < 2) {
+    fprintf(stderr,
+            "Evaluator error: too few parameters passed to operator defvar\n");
+    return NULL;
+  }
+  if (tree->cnt > 2) {
+    fprintf(stderr,
+            "Evaluator error: too many parameters passed to operator defvar\n");
+    return NULL;
+  }
+  if (tree->children[0].token->type != TOKEN_ID) {
+    char *name = extract_token(tree->children[0].token);
+    fprintf(stderr,
+            "Evaluator error: \"%s\" is not a name of variable. Expected an "
+            "identifier\n",
+            name);
+    free(name);
+    return NULL;
+  }
+
   variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
   *var = (variable_t){.type = VAR,
                       .name = extract_token(tree->children[0].token),
@@ -79,11 +104,31 @@ static void create_variable(const as_tree_t *tree, scope_t *scope) {
 }
 
 static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
+  if (tree->cnt < 3) {
+    fprintf(stderr,
+            "Evaluator error: too few parameters passed to operator defun\n");
+    return NULL;
+  }
+  if (tree->cnt > 3) {
+    fprintf(stderr,
+            "Evaluator error: too many parameters passed to operator defun\n");
+    return NULL;
+  }
+  if (tree->children[0].token->type != TOKEN_ID) {
+    char *name = extract_token(tree->children[0].token);
+    fprintf(stderr,
+            "Evaluator error: \"%s\" is not a name of function. Expected an "
+            "identifier\n",
+            name);
+    free(name);
+    return NULL;
+  }
+
   function_t *func = (function_t *)calloc(1, sizeof(function_t));
   *func = (function_t){
       .type = FUNC,
       .name = extract_token(tree->children[0].token),
-      .args_cnt = tree->children[1].cnt + 1,
+      .args_cnt = tree->children[1].cnt + (tree->children[1].token != NULL),
       .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
       .closure = (void *)copy_scope(scope),
       .body = copy_tree(&tree->children[2])};
@@ -91,12 +136,14 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
   *symbol = (function_t){
       .type = FUNC,
       .name = extract_token(tree->children[0].token),
-      .args_cnt = tree->children[1].cnt + 1,
+      .args_cnt = tree->children[1].cnt + (tree->children[1].token != NULL),
       .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
       .closure = (void *)copy_scope(scope),
       .body = copy_tree(&tree->children[2])};
-  func->args[0] = extract_token(tree->children[1].token);
-  symbol->args[0] = extract_token(tree->children[1].token);
+  if (tree->children[1].token != NULL) {
+    func->args[0] = extract_token(tree->children[1].token);
+    symbol->args[0] = extract_token(tree->children[1].token);
+  }
   for (size_t i = 1; i < func->args_cnt; i++) {
     func->args[i] = extract_token(tree->children[1].children[i - 1].token);
     symbol->args[i] = extract_token(tree->children[1].children[i - 1].token);
@@ -106,14 +153,26 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
 }
 
 static value_t *create_lambda(const as_tree_t *tree, scope_t *scope) {
+  if (tree->cnt < 2) {
+    fprintf(stderr,
+            "Evaluator error: too few parameters passed to operator lambda\n");
+    return NULL;
+  }
+  if (tree->cnt > 2) {
+    fprintf(stderr,
+            "Evaluator error: too many parameters passed to operator lambda\n");
+    return NULL;
+  }
   function_t *func = (function_t *)calloc(1, sizeof(function_t));
   *func = (function_t){
       .type = FUNC,
-      .args_cnt = tree->children[0].cnt + 1,
+      .args_cnt = tree->children[0].cnt + (tree->children[0].token != NULL),
       .args = (char **)calloc(tree->children[1].cnt + 1, sizeof(char *)),
       .closure = (void *)copy_scope(scope),
       .body = copy_tree(&tree->children[1])};
-  func->args[0] = extract_token(tree->children[0].token);
+  if (tree->children[1].token != NULL) {
+    func->args[0] = extract_token(tree->children[0].token);
+  }
   for (size_t i = 1; i < func->args_cnt; i++) {
     func->args[i] = extract_token(tree->children[0].children[i - 1].token);
   }
@@ -122,6 +181,19 @@ static value_t *create_lambda(const as_tree_t *tree, scope_t *scope) {
 
 static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
                                   scope_t *scope) {
+  if (func->args_cnt > tree->cnt) {
+    fprintf(stderr,
+            "Evaluator error: Too few arguments passed to function %s\n",
+            func->name);
+    return NULL;
+  }
+  if (func->args_cnt < tree->cnt) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function %s\n",
+            func->name);
+    return NULL;
+  }
+
   scope_t *inner = make_scope(scope);
   inner->closure = func->closure;
   for (size_t i = 0; i < func->args_cnt; i++) {
@@ -137,6 +209,17 @@ static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
 }
 
 static value_t *evaluate_if(const as_tree_t *tree, scope_t *scope) {
+  if (tree->cnt < 3) {
+    fprintf(stderr,
+            "Evaluator error: too few parameters passed to operator if\n");
+    return NULL;
+  }
+  if (tree->cnt > 3) {
+    fprintf(stderr,
+            "Evaluator error: too many parameters passed to operator if\n");
+    return NULL;
+  }
+
   value_t *cond = evaluate(&tree->children[0], scope);
   if (is_nil(cond)) {
     destroy_value(cond);
@@ -206,7 +289,6 @@ static value_t *evaluate_quoted(const as_tree_t *tree, scope_t *scope) {
       return (value_t *)extract_string(tree);
     case TOKEN_ID:
       char *name = extract_token(tree->token);
-      // printf("%s\n", name);
       value_t *result = look_up_in(scope, name);
       free(name);
       return result;
@@ -219,10 +301,12 @@ static value_t *evaluate_quoted(const as_tree_t *tree, scope_t *scope) {
 value_t *evaluate_reference(const as_tree_t *tree, scope_t *scope) {
   char *name = extract_token(tree->token);
   value_t *symbol = look_up_in(scope, name);
-  free(name);
-  if (symbol == NULL) {
+  if (symbol == NULL || (symbol->type != CORE && symbol->type != FUNC)) {
+    fprintf(stderr, "Evaluator error: Undefined function %s\n", name);
+    free(name);
     return NULL;
   }
+  free(name);
   switch (symbol->type) {
     case CORE:
       core_function_t *core =
