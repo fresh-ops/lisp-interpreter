@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "lexer.h"
@@ -35,6 +36,7 @@ static as_tree_t *parse_symbol(const char *input, int quoted) {
       free(child);
     }
     if (*input != ')') {
+      fprintf(stderr, "Parser error: Unexpected end of line. Expected \')\'\n");
       destroy_tree(tree, 1, 0);
       return NULL;
     }
@@ -70,23 +72,34 @@ as_tree_t *parse(const char *input) {
   if (*input == '(') {
     return parse_expression(input);
   }
-  if (*input == '#' && *(input + 1) == '\'') {
-    token_t *token = parse_identifier(input + 2);
-    if (token == NULL) {
-      return NULL;
+  if (*input == '#') {
+    if (*(input + 1) == '\'') {
+      token_t *token = parse_identifier(input + 2);
+      if (token == NULL) {
+        fprintf(stderr,
+                "Parser error: Expected an identifier\nError occured while "
+                "parsing \"%s\"\n",
+                input);
+        return NULL;
+      }
+
+      as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+
+      if (tree == NULL) {
+        free(token);
+        return NULL;
+      }
+
+      tree->token = token;
+      tree->type = REFERENCE;
+      tree->length = token->length + 2;
+      return tree;
     }
-
-    as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
-
-    if (tree == NULL) {
-      free(token);
-      return NULL;
-    }
-
-    tree->token = token;
-    tree->type = REFERENCE;
-    tree->length = token->length + 2;
-    return tree;
+    fprintf(stderr,
+            "Parser error: Unexpected character \'%c\'. Expected \'\'\'\nError "
+            "occured while parsing \"%s\"\n",
+            *(input + 1), input);
+    return NULL;
   }
   int quoted = 0;
   if (*input == '\'') {
@@ -137,6 +150,7 @@ static as_tree_t *parse_expression(const char *input) {
     free(child);
   }
   if (*input != ')') {
+    fprintf(stderr, "Parser error: Unexpected end of line. Expected \')\'\n");
     destroy_tree(tree, 1, 0);
     return NULL;
   }
