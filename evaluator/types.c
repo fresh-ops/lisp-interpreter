@@ -1,6 +1,7 @@
 #include "types.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "scope.h"
 
@@ -64,6 +65,9 @@ void destroy_value(value_t *value) {
       break;
     case LIST:
       destroy_list((list_t *)value);
+      break;
+    case TRUE:
+      free(value);
       break;
     default:
       break;
@@ -139,7 +143,34 @@ value_t *copy_value(value_t *value) {
       return copy_function((function_t *)value);
     case LIST:
       return copy_list((list_t *)value);
+    case TRUE:
+      return make_true();
     default:
       return NULL;
   }
+}
+
+int is_nil(value_t *value) {
+  if (value == NULL) {
+    return 1;
+  }
+  if (value->type == LIST) {
+    list_t *list = value;
+    if (list->data == NULL && list->next == NULL) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+value_t *make_nil() {
+  list_t *value = (list_t *)calloc(1, sizeof(list_t));
+  value->type = LIST;
+  return (value_t *)value;
+}
+
+value_t *make_true() {
+  value_t *result = (value_t *)calloc(1, sizeof(value_t));
+  result->type = TRUE;
+  return result;
 }
