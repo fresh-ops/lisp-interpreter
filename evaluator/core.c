@@ -90,6 +90,33 @@ value_t *le(value_t **args) {
   return make_true();
 }
 
+value_t *lor(value_t **args) {
+  for (size_t i = 0; args[i] != NULL; i++) {
+    if (!is_nil(args[i])) {
+      return copy_value(args[i]);
+    }
+  }
+  return make_nil();
+}
+
+value_t *land(value_t **args) {
+  value_t *last;
+  for (size_t i = 0; args[i] != NULL; i++) {
+    if (is_nil(args[i])) {
+      return make_nil();
+    }
+    last = args[i];
+  }
+  return copy_value(last);
+}
+
+value_t *lnot(value_t **args) {
+  if (is_nil(args[0])) {
+    return make_true();
+  }
+  return make_nil();
+}
+
 value_t *funcall(value_t **args) {
   switch (args[0]->type) {
     case CORE:
