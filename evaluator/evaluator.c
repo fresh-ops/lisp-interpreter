@@ -80,7 +80,7 @@ static value_t *evaluate_core_function(core_function_t *func,
   return result;
 }
 
-static void create_variable(const as_tree_t *tree, scope_t *scope) {
+static value_t *create_variable(const as_tree_t *tree, scope_t *scope) {
   if (tree->cnt < 2) {
     fprintf(stderr,
             "Evaluator error: too few parameters passed to operator defvar\n");
@@ -106,6 +106,8 @@ static void create_variable(const as_tree_t *tree, scope_t *scope) {
                       .name = extract_token(tree->children[0].token),
                       .data = evaluate(&tree->children[1], scope)};
   add_symbol(scope, (value_t *)var);
+  var = (variable_t *)copy_value((value_t *)var);
+  return var;
 }
 
 static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
@@ -252,8 +254,7 @@ static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
     return create_function(tree, scope);
   } else if (strcmp(name, "defvar") == 0) {
     free(name);
-    create_variable(tree, scope);
-    return NULL;
+    return create_variable(tree, scope);
   } else if (strcmp(name, "lambda") == 0) {
     free(name);
     return create_lambda(tree, scope);
