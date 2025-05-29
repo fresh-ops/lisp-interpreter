@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "cache.h"
 #include "core.h"
 #include "evaluator.h"
 #include "parser.h"
@@ -127,6 +128,7 @@ int main() {
 
   scope_t *scope = make_scope(NULL);
   add_core(scope);
+  init_cache();
   while (1) {
     printf("> ");
     fgets(input, 99, stdin);
@@ -151,5 +153,6 @@ int main() {
     destroy_tree(tree, 1, 0);
   }
   destroy_scope(scope);
+  destroy_cache();
   return 0;
 }
