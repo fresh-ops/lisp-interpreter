@@ -7,6 +7,10 @@
 #include "core.h"
 #include "parser.h"
 
+#define MAX_DEPTH 50000
+
+static size_t depth = 0;
+
 static integer_t *extract_integer(const as_tree_t *tree) {
   char *value = extract_token(tree->token);
   integer_t *result = (integer_t *)calloc(1, sizeof(integer_t));
@@ -211,6 +215,11 @@ static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
                         .data = evaluate(&tree->children[i], inner)};
     args[i] = var->data;
     add_symbol(inner, (value_t *)var);
+    if (args[i] == NULL) {
+      destroy_scope(inner);
+      free(args);
+      return NULL;
+    }
   }
   value_t *result = search_cache(func->name, args);
   if (result == NULL) {
@@ -347,20 +356,35 @@ value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
   if (tree == NULL) {
     return NULL;
   }
-  if (tree->type == VALUE) {
-    return evaluate_value(tree);
+  depth++;
+  if (depth > MAX_DEPTH) {
+    fprintf(stderr, "Evaluator error: Out of maximum recursion depth %lld\n",
+            MAX_DEPTH);
+    depth = 0;
+    return NULL;
   }
-  if (tree->type == NAME) {
-    return evaluate_name(tree, scope);
+  value_t *result = NULL;
+  switch (tree->type) {
+    case VALUE:
+      result = evaluate_value(tree);
+      break;
+    case NAME:
+      result = evaluate_name(tree, scope);
+      break;
+    case EXPRESSION:
+      result = evaluate_expression(tree, scope);
+      break;
+    case QUOTED:
+      result = evaluate_quoted(tree, scope);
+      break;
+    case REFERENCE:
+      result = evaluate_reference(tree, scope);
+      break;
+    default:
+      break;
   }
-  if (tree->type == EXPRESSION) {
-    return evaluate_expression(tree, scope);
+  if (result != NULL) {
+    depth--;
   }
-  if (tree->type == QUOTED) {
-    return evaluate_quoted(tree, scope);
-  }
-  if (tree->type == REFERENCE) {
-    return evaluate_reference(tree, scope);
-  }
-  return NULL;
+  return result;
 }
