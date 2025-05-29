@@ -304,7 +304,7 @@ static value_t *evaluate_quoted(const as_tree_t *tree, scope_t *scope) {
       char *name = extract_token(tree->token);
       value_t *result = look_up_in(scope, name);
       free(name);
-      return result;
+      return copy_value((value_t *)result);
     default:
       break;
   }
