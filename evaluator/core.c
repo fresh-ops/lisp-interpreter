@@ -12,6 +12,28 @@ void set_scope(scope_t *scope) { _scope = scope; }
 
 scope_t *get_scope() { return _scope; }
 
+value_t *head(value_t **args) {
+  if (args[0]->type != LIST) {
+    fprintf(
+        stderr,
+        "Evaluator error: Type mismatch. The argument of function head must "
+        "be list\n");
+    return NULL;
+  }
+  return copy_value(((list_t *)args[0])->data);
+}
+
+value_t *tail(value_t **args) {
+  if (args[0]->type != LIST) {
+    fprintf(
+        stderr,
+        "Evaluator error: Type mismatch. The argument of function tail must "
+        "be list\n");
+    return NULL;
+  }
+  return copy_value(((list_t *)args[0])->next);
+}
+
 value_t *sum(value_t **args) {
   integer_t *result = (integer_t *)calloc(1, sizeof(integer_t));
   *result = (integer_t){.type = INT, .value = 0};

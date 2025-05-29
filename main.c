@@ -62,6 +62,16 @@ void add_core(scope_t *scope) {
 
   func = (core_function_t *)calloc(1, sizeof(core_function_t));
   *func = (core_function_t){
+      .name = strndup("head\0", 5), .body = head, .type = CORE, .args_cnt = 1};
+  add_symbol(scope, (value_t *)func);
+
+  func = (core_function_t *)calloc(1, sizeof(core_function_t));
+  *func = (core_function_t){
+      .name = strndup("tail\0", 5), .body = tail, .type = CORE, .args_cnt = 1};
+  add_symbol(scope, (value_t *)func);
+
+  func = (core_function_t *)calloc(1, sizeof(core_function_t));
+  *func = (core_function_t){
       .name = strndup("exit\0", 5), .body = quit, .type = CORE};
   add_symbol(scope, (value_t *)func);
 
