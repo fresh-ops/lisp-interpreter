@@ -29,6 +29,11 @@ static as_tree_t *parse_symbol(const char *input, int quoted) {
         destroy_tree(tree, 1, 0);
         return NULL;
       }
+      if (tree->cnt >= tree->cap) {
+        tree->cap *= 2;
+        tree->children =
+            (as_tree_t *)realloc(tree->children, tree->cap * sizeof(as_tree_t));
+      }
       child->length--;
       memcpy(&tree->children[tree->cnt++], child, sizeof(as_tree_t));
       input += child->length;
