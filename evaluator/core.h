@@ -21,6 +21,8 @@ value_t *ge(value_t **args);
 
 value_t *le(value_t **args);
 
+value_t *eq(value_t **args);
+
 value_t *lor(value_t **args);
 
 value_t *land(value_t **args);

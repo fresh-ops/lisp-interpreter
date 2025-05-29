@@ -150,6 +150,67 @@ value_t *copy_value(value_t *value) {
   }
 }
 
+static int compare_integer(integer_t *a, integer_t *b) {
+  return a->value == b->value;
+}
+
+static int compare_string(string_t *a, string_t *b) {
+  return strcmp(a->value, b->value) == 0;
+}
+
+static int compare_variable(variable_t *a, variable_t *b) {
+  if (strcmp(a->name, b->name) == 0) {
+    return compare_value(a->data, b->data);
+  }
+  return 0;
+}
+
+static int compare_core_function(core_function_t *a, core_function_t *b) {
+  return a->body == b->body;
+}
+
+static int compare_function(function_t *a, function_t *b) {
+  return strcmp(a->name, b->name) == 0;
+}
+
+static int compare_list(list_t *a, list_t *b) {
+  if (a == NULL && b == NULL) {
+    return 1;
+  }
+  if (a == NULL || b == NULL) {
+    return 0;
+  }
+  if (compare_value(a->data, b->data)) {
+    return compare_list(a->next, b->next);
+  }
+  return 0;
+}
+
+int compare_value(value_t *a, value_t *b) {
+  if (a == NULL || b == NULL || a->type != b->type) {
+    return 0;
+  }
+
+  switch (a->type) {
+    case INT:
+      return compare_integer((integer_t *)a, (integer_t *)b);
+    case STR:
+      return compare_string((string_t *)a, (string_t *)b);
+    case VAR:
+      return compare_variable((variable_t *)a, (variable_t *)b);
+    case CORE:
+      return compare_core_function((core_function_t *)a, (core_function_t *)b);
+    case FUNC:
+      return compare_function((function_t *)a, (function_t *)b);
+    case LIST:
+      return compare_list((list_t *)a, (list_t *)b);
+    case TRUE:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 int is_nil(value_t *value) {
   if (value == NULL) {
     return 1;

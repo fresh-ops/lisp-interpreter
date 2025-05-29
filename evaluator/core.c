@@ -150,6 +150,17 @@ value_t *le(value_t **args) {
   return make_true();
 }
 
+value_t *eq(value_t **args) {
+  value_t *last = args[0];
+  for (size_t i = 1; args[i] != NULL; i++) {
+    if (!compare_value(last, args[i])) {
+      return make_nil();
+    }
+    last = args[i];
+  }
+  return make_true();
+}
+
 value_t *lor(value_t **args) {
   for (size_t i = 0; args[i] != NULL; i++) {
     if (!is_nil(args[i])) {
