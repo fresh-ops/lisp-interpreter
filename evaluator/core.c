@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "cache.h"
 #include "evaluator.h"
 
 static scope_t *_scope = NULL;
@@ -191,22 +192,32 @@ value_t *lnot(value_t **args) {
 value_t *funcall(value_t **args) {
   switch (args[0]->type) {
     case CORE:
-      return ((core_function_t *)args[0])->body(args + 1);
+      value_t *result =
+          search_cache(((core_function_t *)args[0])->name, args + 1);
+      if (result == NULL) {
+        result = ((core_function_t *)args[0])->body(args + 1);
+        cache_result(((core_function_t *)args[0])->name, args + 1, result);
+      }
+      return result;
     case FUNC:
       scope_t *outer = get_scope();
       scope_t *scope = make_scope(outer);
       function_t *func = (function_t *)args[0];
       scope->closure = func->closure;
-      for (size_t i = 0; i < func->args_cnt; i++) {
-        variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
-        *var =
-            (variable_t){.type = VAR,
-                         .name = strndup(func->args[i], strlen(func->args[i])),
-                         .data = args[i + 1]};
-        args[i + 1] = NULL;
-        add_symbol(scope, (value_t *)var);
+      result = search_cache(func->name, args + 1);
+      if (result == NULL) {
+        for (size_t i = 0; i < func->args_cnt; i++) {
+          variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
+          *var = (variable_t){
+              .type = VAR,
+              .name = strndup(func->args[i], strlen(func->args[i])),
+              .data = args[i + 1]};
+          args[i + 1] = NULL;
+          add_symbol(scope, (value_t *)var);
+        }
+        result = evaluate(func->body, scope);
+        cache_result(func->name, args + 1, result);
       }
-      value_t *result = evaluate(func->body, scope);
       destroy_scope(scope);
       return result;
     default:
@@ -235,7 +246,13 @@ value_t *mapcar(value_t **args) {
     case CORE:
       while (list != NULL) {
         args[1] = list->data;
-        result->data = ((core_function_t *)args[0])->body(args + 1);
+        result->data =
+            search_cache(((core_function_t *)args[0])->name, args + 1);
+        if (result == NULL) {
+          result->data = ((core_function_t *)args[0])->body(args + 1);
+          cache_result(((core_function_t *)args[0])->name, args + 1,
+                       result->data);
+        }
         if (list->next != NULL) {
           result->next = (list_t *)calloc(1, sizeof(list_t));
           result = result->next;
@@ -248,16 +265,22 @@ value_t *mapcar(value_t **args) {
     case FUNC:
       function_t *func = (function_t *)args[0];
       scope_t *scope = get_scope();
+      value_t **call_args = (value_t **)calloc(2, sizeof(value_t *));
       while (list != NULL) {
         scope_t *inner = make_scope(scope);
         inner->closure = func->closure;
-        variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
-        *var =
-            (variable_t){.type = VAR,
-                         .name = strndup(func->args[0], strlen(func->args[0])),
-                         .data = copy_value(list->data)};
-        add_symbol(inner, (value_t *)var);
-        result->data = evaluate(func->body, inner);
+        call_args[0] = list->data;
+        result->data = search_cache(func->name, call_args);
+        if (result->data == NULL) {
+          variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
+          *var = (variable_t){
+              .type = VAR,
+              .name = strndup(func->args[0], strlen(func->args[0])),
+              .data = copy_value(list->data)};
+          add_symbol(inner, (value_t *)var);
+          result->data = evaluate(func->body, inner);
+          cache_result(func->name, call_args, result->data);
+        }
         destroy_scope(inner);
         if (list->next != NULL) {
           result->next = (list_t *)calloc(1, sizeof(list_t));
@@ -267,6 +290,7 @@ value_t *mapcar(value_t **args) {
         list = list->next;
       }
       args[1] = (value_t *)list_start;
+      free(call_args);
       break;
     default:
       fprintf(stderr,
