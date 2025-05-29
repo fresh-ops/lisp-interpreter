@@ -154,7 +154,7 @@ static value_t *create_function(const as_tree_t *tree, scope_t *scope) {
     symbol->args[i] = extract_token(tree->children[1].children[i - 1].token);
   }
   add_symbol(scope, (value_t *)func);
-  return symbol;
+  return (value_t *)symbol;
 }
 
 static value_t *create_lambda(const as_tree_t *tree, scope_t *scope) {
@@ -181,7 +181,7 @@ static value_t *create_lambda(const as_tree_t *tree, scope_t *scope) {
   for (size_t i = 1; i < func->args_cnt; i++) {
     func->args[i] = extract_token(tree->children[0].children[i - 1].token);
   }
-  return func;
+  return (value_t *)func;
 }
 
 static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
@@ -325,7 +325,7 @@ value_t *evaluate_reference(const as_tree_t *tree, scope_t *scope) {
           (core_function_t *)calloc(1, sizeof(core_function_t));
       memcpy(core, symbol, sizeof(core_function_t));
       core->name = strdup(core->name);
-      return core;
+      return (value_t *)core;
     case FUNC:
       function_t *func = (function_t *)calloc(1, sizeof(function_t));
       memcpy(func, symbol, sizeof(function_t));
@@ -336,7 +336,7 @@ value_t *evaluate_reference(const as_tree_t *tree, scope_t *scope) {
       }
       func->args = args;
       func->body = copy_tree(((function_t *)symbol)->body);
-      return func;
+      return (value_t *)func;
     default:
       return NULL;
   }

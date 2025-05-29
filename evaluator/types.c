@@ -122,7 +122,7 @@ static value_t *copy_list(list_t *value) {
   list_t *copy = (list_t *)calloc(1, sizeof(list_t));
   copy->type = LIST;
   copy->data = copy_value(value->data);
-  copy->next = copy_list(value->next);
+  copy->next = (list_t *)copy_list(value->next);
   return (value_t *)copy;
 }
 
@@ -216,7 +216,7 @@ int is_nil(value_t *value) {
     return 1;
   }
   if (value->type == LIST) {
-    list_t *list = value;
+    list_t *list = (list_t *)value;
     if (list->data == NULL && list->next == NULL) {
       return 1;
     }

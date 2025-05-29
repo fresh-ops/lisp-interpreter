@@ -226,7 +226,7 @@ value_t *mapcar(value_t **args) {
             "a list\n");
     return NULL;
   }
-  list_t *list = args[1];
+  list_t *list = (list_t *)args[1];
   list_t *list_start = list;
   list_t *result = (list_t *)calloc(1, sizeof(list_t));
   result->type = LIST;
@@ -243,7 +243,7 @@ value_t *mapcar(value_t **args) {
         }
         list = list->next;
       }
-      args[1] = list_start;
+      args[1] = (value_t *)list_start;
       break;
     case FUNC:
       function_t *func = (function_t *)args[0];
@@ -266,14 +266,14 @@ value_t *mapcar(value_t **args) {
         }
         list = list->next;
       }
-      args[1] = list_start;
+      args[1] = (value_t *)list_start;
       break;
     default:
       fprintf(stderr,
               "Evaluator error: Type mismatch. The first argument of function "
               "mapcar must be "
               "a function reference\n");
-      destroy_value(result);
+      destroy_value((value_t *)result);
       return NULL;
   }
   return (value_t *)result_start;
