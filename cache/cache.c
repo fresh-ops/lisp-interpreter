@@ -60,6 +60,7 @@ static int compare_args(value_t **args1, value_t **args2) {
 
 void cache_result(char *name, value_t **args, value_t *result) {
   init_cache();
+  if (name == NULL) return;
 
   size_t ind = 0;
   for (ind = 0; ind < cnt; ind++) {
@@ -114,6 +115,7 @@ void cache_result(char *name, value_t **args, value_t *result) {
 
 value_t *search_cache(char *name, value_t **args) {
   if (bank == NULL) return NULL;
+  if (name == NULL) return NULL;
 
   for (size_t i = 0; i < cnt; i++) {
     if (strcmp(name, bank[i].name) == 0) {
