@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "cache.h"
 #include "core.h"
 #include "parser.h"
 
@@ -66,7 +67,11 @@ static value_t *evaluate_core_function(core_function_t *func,
   }
 
   set_scope(scope);
-  value_t *result = func->body(args);
+  value_t *result = search_cache(func->name, args);
+  if (result == NULL) {
+    result = func->body(args);
+    cache_result(func->name, args, result);
+  }
   set_scope(NULL);
   for (size_t i = 0; i < tree->cnt + 1; i++) {
     free(args[i]);
@@ -196,14 +201,21 @@ static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
 
   scope_t *inner = make_scope(scope);
   inner->closure = func->closure;
+  value_t **args = (value_t **)calloc(func->args_cnt + 1, sizeof(value_t *));
   for (size_t i = 0; i < func->args_cnt; i++) {
     variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
     *var = (variable_t){.type = VAR,
                         .name = strndup(func->args[i], strlen(func->args[i])),
                         .data = evaluate(&tree->children[i], inner)};
+    args[i] = var->data;
     add_symbol(inner, (value_t *)var);
   }
-  value_t *result = evaluate(func->body, inner);
+  value_t *result = search_cache(func->name, args);
+  if (result == NULL) {
+    result = evaluate(func->body, inner);
+    cache_result(func->name, args, result);
+  }
+  free(args);
   destroy_scope(inner);
   return result;
 }
