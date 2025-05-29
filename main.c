@@ -123,7 +123,62 @@ void add_core(scope_t *scope) {
   add_symbol(scope, (value_t *)func);
 }
 
-int main() {
+void print_help() {
+  printf("LISP INTERPRETER HELP MANUAL\n");
+  printf("===========================\n\n");
+
+  printf("SYNOPSIS\n");
+  printf("    (function arg1 arg2 ...)\n\n");
+
+  printf("CORE FUNCTIONS\n");
+  printf("    Arithmetic:\n");
+  printf("    (sum a b)                 - Returns a + b\n");
+  printf("    (sub a b)                 - Returns a - b\n\n");
+
+  printf("    Comparisons (work with 2+ arguments):\n");
+  printf("    (gt a b c ...)            - Returns true if a > b > c > ...\n");
+  printf("    (lt a b c ...)            - Returns true if a < b < c < ...\n");
+  printf(
+      "    (ge a b c ...)            - Returns true if a >= b >= c >= ...\n");
+  printf(
+      "    (le a b c ...)            - Returns true if a <= b <= c <= ...\n");
+  printf(
+      "    (eq a b c ...)            - Returns true if all arguments are "
+      "equal\n\n");
+
+  printf("    Functional:\n");
+  printf("    (funcall fn ...)          - Calls function fn with arguments\n");
+  printf(
+      "    (mapcar fn list)          - Applies fn to each element of list\n");
+  printf("    (exit)                    - Quits the interpreter\n\n");
+
+  printf("SYNTAX\n");
+  printf("    Lists:                    '(1 2 3)\n");
+  printf("    Function ref:             #'function-name\n");
+  printf("    Lambda:                   (lambda (args) body)\n\n");
+
+  printf("DEFINITIONS\n");
+  printf("    (defvar name value)      - Defines a variable\n");
+  printf("    (defun name (args) body) - Defines a function\n\n");
+
+  printf("Commands\n");
+  printf("    :h                       - Prints this manual\n\n");
+}
+
+int main(int argc, char **argv) {
+  if (argc == 2) {
+    if (strcmp(argv[1], "--help") == 0) {
+      print_help();
+      return 0;
+    }
+    printf("Undefined flag %s. Try to use flag --help to see manual\n",
+           argv[1]);
+    return 0;
+  }
+  if (argc > 2) {
+    printf("Too many arguments passed. Try to use flag --help to see manual\n");
+    return 0;
+  }
   char input[100];
 
   scope_t *scope = make_scope(NULL);
@@ -136,6 +191,10 @@ int main() {
       if (input[j] == '\n') {
         input[j] = '\0';
       }
+    }
+    if (strcmp(input, ":h") == 0) {
+      print_help();
+      continue;
     }
     as_tree_t *tree = parse(input);
     if (tree == NULL) {
