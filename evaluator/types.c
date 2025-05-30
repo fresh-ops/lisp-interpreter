@@ -170,6 +170,9 @@ static int compare_core_function(core_function_t *a, core_function_t *b) {
 }
 
 static int compare_function(function_t *a, function_t *b) {
+  if (a->name == NULL || b->name == NULL) {
+    return 0;
+  }
   return strcmp(a->name, b->name) == 0;
 }
 
