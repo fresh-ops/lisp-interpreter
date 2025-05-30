@@ -112,6 +112,9 @@ static value_t *copy_function(function_t *value) {
     copy->args[i] = strdup(value->args[i]);
   }
   copy->body = copy_tree(value->body);
+  if (value->closure != NULL) {
+    copy->closure = copy_scope(value->closure);
+  }
   return (value_t *)copy;
 }
 
