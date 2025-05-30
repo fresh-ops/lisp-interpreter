@@ -50,12 +50,13 @@ void destroy_cache() {
 }
 
 static int compare_args(value_t **args1, value_t **args2) {
-  for (size_t i = 0; args1[i] != NULL && args2[i] != NULL; i++) {
+  size_t i;
+  for (i = 0; args1[i] != NULL && args2[i] != NULL; i++) {
     if (!compare_value(args1[i], args2[i])) {
       return 0;
     }
   }
-  return 1;
+  return args1[i] == args2[i];
 }
 
 void cache_result(char *name, value_t **args, value_t *result) {
