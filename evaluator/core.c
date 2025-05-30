@@ -34,6 +34,59 @@ value_t *tail(value_t **args) {
   return copy_value(((list_t *)args[0])->next);
 }
 
+value_t *cat(value_t **args) {
+  if (args[0]->type != LIST || args[1]->type != LIST) {
+    fprintf(
+        stderr,
+        "Evaluator error: Type mismatch. The arguments of function cat must "
+        "be list\n");
+    return NULL;
+  }
+  list_t *result = (list_t *)copy_value(args[0]);
+  list_t *tail = result;
+  while (tail->next != NULL) {
+    tail = tail->next;
+  }
+  tail->next = (list_t *)copy_value(args[1]);
+  return (value_t *)result;
+}
+
+value_t *list(value_t **args) {
+  list_t *result = (list_t *)calloc(1, sizeof(list_t));
+  result->type = LIST;
+  result->data = (list_t *)copy_value(args[0]);
+  return result;
+}
+
+value_t *del(value_t **args) {
+  if (args[0]->type != LIST) {
+    fprintf(
+        stderr,
+        "Evaluator error: Type mismatch. The argument of function remove must "
+        "be list\n");
+    return NULL;
+  }
+  list_t *result = (list_t *)copy_value(args[0]);
+  list_t *prev = result;
+  list_t *cur = prev->next;
+  if (compare_value(prev->data, args[1])) {
+    prev->next = NULL;
+    destroy_value(prev);
+    return cur;
+  }
+  while (cur != NULL) {
+    if (compare_value(cur->data, args[1])) {
+      prev->next = cur->next;
+      cur->next = NULL;
+      destroy_value(cur);
+      return result;
+    }
+    prev = cur;
+    cur = cur->next;
+  }
+  return (value_t *)result;
+}
+
 value_t *sum(value_t **args) {
   integer_t *result = (integer_t *)calloc(1, sizeof(integer_t));
   *result = (integer_t){.type = INT, .value = 0};

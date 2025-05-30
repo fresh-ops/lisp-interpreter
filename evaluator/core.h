@@ -13,6 +13,12 @@ value_t *head(value_t **args);
 
 value_t *tail(value_t **args);
 
+value_t *cat(value_t **args);
+
+value_t *list(value_t **args);
+
+value_t *del(value_t **args);
+
 value_t *sum(value_t **args);
 
 value_t *sub(value_t **args);

@@ -62,7 +62,22 @@ void add_core(scope_t *scope) {
 
   func = (core_function_t *)calloc(1, sizeof(core_function_t));
   *func = (core_function_t){
+      .name = strndup("del\0", 5), .body = del, .type = CORE, .args_cnt = 2};
+  add_symbol(scope, (value_t *)func);
+
+  func = (core_function_t *)calloc(1, sizeof(core_function_t));
+  *func = (core_function_t){
+      .name = strndup("list\0", 5), .body = list, .type = CORE, .args_cnt = 1};
+  add_symbol(scope, (value_t *)func);
+
+  func = (core_function_t *)calloc(1, sizeof(core_function_t));
+  *func = (core_function_t){
       .name = strndup("head\0", 5), .body = head, .type = CORE, .args_cnt = 1};
+  add_symbol(scope, (value_t *)func);
+
+  func = (core_function_t *)calloc(1, sizeof(core_function_t));
+  *func = (core_function_t){
+      .name = strndup("cat\0", 5), .body = cat, .type = CORE, .args_cnt = 2};
   add_symbol(scope, (value_t *)func);
 
   func = (core_function_t *)calloc(1, sizeof(core_function_t));
@@ -161,6 +176,9 @@ void print_help() {
   printf(
       "    (mapcar fn list)          - Applies fn to each element of list\n");
   printf("    (exit)                    - Quits the interpreter\n\n");
+  printf("  List operations:\n");
+  printf("  (head xs)                   - Returns the head of list\n");
+  printf("  (tail xs)                   - Returns the tail of list\n");
 
   printf("SYNTAX\n");
   printf("    Lists:                    '(1 2 3)\n");
