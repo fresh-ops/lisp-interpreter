@@ -7,6 +7,10 @@
 #include "core.h"
 #include "parser.h"
 
+#define MAX_DEPTH 10000
+
+static size_t depth = 0;
+
 static integer_t *extract_integer(const as_tree_t *tree) {
   char *value = extract_token(tree->token);
   integer_t *result = (integer_t *)calloc(1, sizeof(integer_t));
@@ -347,20 +351,30 @@ value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
   if (tree == NULL) {
     return NULL;
   }
+  depth++;
+  if (depth > MAX_DEPTH) {
+    depth = 0;
+    fprintf(stderr, "Evaluator error: Exit maximum recurcion depth\n");
+    return NULL;
+  }
+  value_t *result = NULL;
   if (tree->type == VALUE) {
-    return evaluate_value(tree);
+    result = evaluate_value(tree);
   }
   if (tree->type == NAME) {
-    return evaluate_name(tree, scope);
+    result = evaluate_name(tree, scope);
   }
   if (tree->type == EXPRESSION) {
-    return evaluate_expression(tree, scope);
+    result = evaluate_expression(tree, scope);
   }
   if (tree->type == QUOTED) {
-    return evaluate_quoted(tree, scope);
+    result = evaluate_quoted(tree, scope);
   }
   if (tree->type == REFERENCE) {
-    return evaluate_reference(tree, scope);
+    result = evaluate_reference(tree, scope);
   }
-  return NULL;
+  if (depth > 0) {
+    depth--;
+  }
+  return result;
 }

@@ -176,9 +176,13 @@ void print_help() {
   printf(
       "    (mapcar fn list)          - Applies fn to each element of list\n");
   printf("    (exit)                    - Quits the interpreter\n\n");
+
   printf("  List operations:\n");
   printf("  (head xs)                   - Returns the head of list\n");
   printf("  (tail xs)                   - Returns the tail of list\n");
+  printf("  (list x)                    - Wraps x in a list\n");
+  printf("  (cat xs ys)                 - Concatenates two lists\n");
+  printf("  (del xs x)                  - Removes first occurence of x\n\n");
 
   printf("SYNTAX\n");
   printf("    Lists:                    '(1 2 3)\n");
