@@ -17,6 +17,8 @@ value_t *cat(value_t **args);
 
 value_t *list(value_t **args);
 
+value_t *isnil(value_t **args);
+
 value_t *del(value_t **args);
 
 value_t *sum(value_t **args);

@@ -90,6 +90,13 @@ void add_core(scope_t *scope) {
   add_symbol(scope, (value_t *)func);
 
   func = (core_function_t *)calloc(1, sizeof(core_function_t));
+  *func = (core_function_t){.name = strndup("isnil\0", 6),
+                            .body = isnil,
+                            .type = CORE,
+                            .args_cnt = 1};
+  add_symbol(scope, (value_t *)func);
+
+  func = (core_function_t *)calloc(1, sizeof(core_function_t));
   *func = (core_function_t){
       .name = strndup("exit\0", 5), .body = quit, .type = CORE};
   add_symbol(scope, (value_t *)func);
@@ -185,6 +192,8 @@ void print_help() {
   printf("  (head xs)                   - Returns the head of list\n");
   printf("  (tail xs)                   - Returns the tail of list\n");
   printf("  (list x)                    - Wraps x in a list\n");
+  printf(
+      "  (isnil x)                   - Returns true if passed list is empty\n");
   printf("  (cat xs ys)                 - Concatenates two lists\n");
   printf("  (del xs x)                  - Removes first occurence of x\n\n");
 

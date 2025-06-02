@@ -58,6 +58,22 @@ value_t *list(value_t **args) {
   return (value_t *)result;
 }
 
+value_t *isnil(value_t **args) {
+  if (args[1] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function isnil\n");
+    return NULL;
+  }
+  if (args[0]->type != LIST) {
+    fprintf(stderr,
+            "Evaluator error: Type mismatch. The first argument of function "
+            "isnil must be list\n");
+    return NULL;
+  }
+  if (is_nil(args[0])) return make_true();
+  return make_nil();
+}
+
 value_t *del(value_t **args) {
   if (args[0]->type != LIST) {
     fprintf(
