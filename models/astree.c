@@ -41,7 +41,7 @@ void destroy_tree(as_tree_t *tree, int free_tree, int free_token_text) {
   free(tree->children);
   if (tree->token != NULL) {
     if (free_token_text) {
-      free(tree->token->start);
+      free((void *)tree->token->start);
     }
     free(tree->token);
   }

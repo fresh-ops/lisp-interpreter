@@ -49,6 +49,11 @@ void show_value(value_t *value) {
 }
 
 value_t *quit(value_t **args) {
+  if (args != NULL && args[0] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function exit\n");
+    return NULL;
+  }
   stop = 1;
   return NULL;
 }

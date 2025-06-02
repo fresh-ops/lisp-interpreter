@@ -111,7 +111,7 @@ static value_t *create_variable(const as_tree_t *tree, scope_t *scope) {
                       .data = evaluate(&tree->children[1], scope)};
   add_symbol(scope, (value_t *)var);
   var = (variable_t *)copy_value((value_t *)var);
-  return var;
+  return (value_t *)var;
 }
 
 static value_t *create_function(const as_tree_t *tree, scope_t *scope) {

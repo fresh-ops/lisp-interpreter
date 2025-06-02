@@ -31,7 +31,7 @@ value_t *tail(value_t **args) {
         "be list\n");
     return NULL;
   }
-  return copy_value(((list_t *)args[0])->next);
+  return copy_value((value_t *)((list_t *)args[0])->next);
 }
 
 value_t *cat(value_t **args) {
@@ -54,8 +54,8 @@ value_t *cat(value_t **args) {
 value_t *list(value_t **args) {
   list_t *result = (list_t *)calloc(1, sizeof(list_t));
   result->type = LIST;
-  result->data = (list_t *)copy_value(args[0]);
-  return result;
+  result->data = copy_value(args[0]);
+  return (value_t *)result;
 }
 
 value_t *del(value_t **args) {
@@ -71,15 +71,15 @@ value_t *del(value_t **args) {
   list_t *cur = prev->next;
   if (compare_value(prev->data, args[1])) {
     prev->next = NULL;
-    destroy_value(prev);
-    return cur;
+    destroy_value((value_t *)prev);
+    return (value_t *)cur;
   }
   while (cur != NULL) {
     if (compare_value(cur->data, args[1])) {
       prev->next = cur->next;
       cur->next = NULL;
-      destroy_value(cur);
-      return result;
+      destroy_value((value_t *)cur);
+      return (value_t *)result;
     }
     prev = cur;
     cur = cur->next;
