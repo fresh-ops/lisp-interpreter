@@ -54,7 +54,15 @@ value_t *cat(value_t **args) {
 value_t *list(value_t **args) {
   list_t *result = (list_t *)calloc(1, sizeof(list_t));
   result->type = LIST;
-  result->data = copy_value(args[0]);
+  list_t *cur = result;
+  for (size_t i = 0; args[i] != NULL; i++) {
+    cur->data = copy_value(args[i]);
+    if (args[i + 1] != NULL) {
+      cur->next = (list_t *)calloc(1, sizeof(list_t));
+      cur = cur->next;
+      cur->type = LIST;
+    }
+  }
   return (value_t *)result;
 }
 
