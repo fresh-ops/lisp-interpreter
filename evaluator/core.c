@@ -347,7 +347,7 @@ value_t *mapcar(value_t **args) {
         args[1] = list->data;
         result->data =
             search_cache(((core_function_t *)args[0])->name, args + 1);
-        if (result == NULL) {
+        if (result->data == NULL) {
           result->data = ((core_function_t *)args[0])->body(args + 1);
           cache_result(((core_function_t *)args[0])->name, args + 1,
                        result->data);
