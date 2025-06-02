@@ -49,7 +49,6 @@ void show_value(value_t *value) {
 }
 
 value_t *quit(value_t **args) {
-  printf("Bye.\n");
   stop = 1;
   return NULL;
 }
@@ -218,7 +217,10 @@ int main(int argc, char **argv) {
   init_cache();
   while (1) {
     printf("> ");
-    fgets(input, 99, stdin);
+    if (!fgets(input, 99, stdin)) {
+      printf("\n");
+      break;
+    }
     for (size_t j = 0; input[j] != '\0'; j++) {
       if (input[j] == '\n') {
         input[j] = '\0';
@@ -245,5 +247,6 @@ int main(int argc, char **argv) {
   }
   destroy_scope(scope);
   destroy_cache();
+  printf("Bye.\n");
   return 0;
 }
