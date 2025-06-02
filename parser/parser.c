@@ -16,8 +16,12 @@ static size_t skip_whitespaces(const char *input) {
 }
 
 static as_tree_t *parse_symbol(const char *input, int quoted) {
+  const char *start = input - 1;
+  while (*input == '\'') {
+    input++;
+  }
   if (*input == '(') {
-    const char *start = input++ - 1;
+    input++;
     as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
     *tree = (as_tree_t){.type = QUOTED,
                         .cap = 4,
