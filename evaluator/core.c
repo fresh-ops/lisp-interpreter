@@ -42,7 +42,13 @@ value_t *cat(value_t **args) {
         "be list\n");
     return NULL;
   }
+  if (is_nil(args[0])) {
+    return copy_value(args[1]);
+  }
   list_t *result = (list_t *)copy_value(args[0]);
+  if (is_nil(args[1])) {
+    return (value_t *)result;
+  }
   list_t *tail = result;
   while (tail->next != NULL) {
     tail = tail->next;
