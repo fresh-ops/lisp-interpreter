@@ -31,6 +31,9 @@ value_t *tail(value_t **args) {
         "be list\n");
     return NULL;
   }
+  if (((list_t *)args[0])->next == NULL) {
+    return make_nil();
+  }
   return copy_value((value_t *)((list_t *)args[0])->next);
 }
 
