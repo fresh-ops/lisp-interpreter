@@ -47,6 +47,7 @@ static value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
     free(name);
     return NULL;
   }
+  free(name);
   return copy_value(((variable_t *)result)->data);
 }
 
@@ -266,6 +267,7 @@ static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   value_t *symbol = look_up_in(scope, name);
   if (symbol == NULL) {
     printf("No such symbol %s\n", name);
+    free(name);
     return NULL;
   }
   free(name);
