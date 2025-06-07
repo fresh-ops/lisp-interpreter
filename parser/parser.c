@@ -16,7 +16,7 @@ static size_t skip_whitespaces(const char *input) {
 }
 
 static as_tree_t *parse_symbol(const char *input, int quoted) {
-  const char *start = input - 1;
+  const char *start = input;
   while (*input == '\'') {
     input++;
   }
@@ -78,10 +78,12 @@ static as_tree_t *parse_symbol(const char *input, int quoted) {
 }
 
 as_tree_t *parse(const char *input) {
+  static size_t depth = 0;
+  depth++;
+  as_tree_t *tree = NULL;
   if (*input == '(') {
-    return parse_expression(input);
-  }
-  if (*input == '#') {
+    tree = parse_expression(input);
+  } else if (*input == '#') {
     if (*(input + 1) == '\'') {
       token_t *token = parse_identifier(input + 2);
       if (token == NULL) {
@@ -92,7 +94,7 @@ as_tree_t *parse(const char *input) {
         return NULL;
       }
 
-      as_tree_t *tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
+      tree = (as_tree_t *)calloc(1, sizeof(as_tree_t));
 
       if (tree == NULL) {
         free(token);
@@ -109,13 +111,27 @@ as_tree_t *parse(const char *input) {
             "occured while parsing \"%s\"\n",
             *(input + 1), input);
     return NULL;
+  } else {
+    int quoted = 0;
+    if (*input == '\'') {
+      quoted = 1;
+    }
+    tree = parse_symbol(input, quoted);
   }
-  int quoted = 0;
-  if (*input == '\'') {
-    input++;
-    quoted = 1;
+  depth--;
+  if (depth == 0) {
+    size_t parsed_len = (tree) ? tree->length : 0;
+    const char *unparsed = input + parsed_len;
+    unparsed += skip_whitespaces(unparsed);
+    if (*unparsed != '\0') {
+      fprintf(stderr,
+              "Parser error: Unxpected characters '%s'. Expected end of line\n",
+              unparsed);
+      destroy_tree(tree, 1, 0);
+      return NULL;
+    }
   }
-  return parse_symbol(input, quoted);
+  return tree;
 }
 
 static as_tree_t *parse_expression(const char *input) {
