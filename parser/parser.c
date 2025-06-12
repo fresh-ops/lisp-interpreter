@@ -38,7 +38,7 @@ static as_tree_t *parse_symbol(const char *input, int quoted) {
         tree->children =
             (as_tree_t *)realloc(tree->children, tree->cap * sizeof(as_tree_t));
       }
-      child->length--;
+
       memcpy(&tree->children[tree->cnt++], child, sizeof(as_tree_t));
       input += child->length;
       input += skip_whitespaces(input);
@@ -65,13 +65,13 @@ static as_tree_t *parse_symbol(const char *input, int quoted) {
   }
 
   tree->token = token;
-  tree->length = (token->type == TOKEN_STR)
-                     ? token->length + 2  // длинна строки не учитывает ковычки
-                     : token->length;
+  tree->length = token->start + token->length - start;
+  if (token->type == TOKEN_STR) {
+    tree->length += 2;  // длинна строки не учитывает ковычки
+  }
   tree->type = (token->type == TOKEN_ID) ? NAME : VALUE;
   if (quoted) {
     tree->type = QUOTED;
-    tree->length++;
   }
 
   return tree;
