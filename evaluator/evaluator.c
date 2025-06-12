@@ -240,6 +240,9 @@ static value_t *evaluate_if(const as_tree_t *tree, scope_t *scope) {
   }
 
   value_t *cond = evaluate(&tree->children[0], scope);
+  if (cond == NULL) {
+    return NULL;
+  }
   if (is_nil(cond)) {
     destroy_value(cond);
     return evaluate(&tree->children[2], scope);
