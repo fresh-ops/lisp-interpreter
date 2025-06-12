@@ -210,6 +210,24 @@ void print_help() {
   printf("    :h                       - Prints this manual\n\n");
 }
 
+char *read(FILE *stream) {
+  size_t cap = 2;
+  char *str = (char *)calloc(cap + 1, sizeof(char));
+  for (size_t i = 0; !feof(stream); i++) {
+    if (i >= cap) {
+      cap *= 2;
+      str = (char *)realloc(str, (cap + 1) * sizeof(char));
+    }
+    str[i] = fgetc(stream);
+    str[i + 1] = '\0';
+    if (str[i] == '\n' || str[i] == EOF) {
+      str[i] = '\0';
+      break;
+    }
+  }
+  return str;
+}
+
 int main(int argc, char **argv) {
   if (argc == 2) {
     if (strcmp(argv[1], "--help") == 0) {
@@ -224,21 +242,17 @@ int main(int argc, char **argv) {
     printf("Too many arguments passed. Try to use flag --help to see manual\n");
     return 0;
   }
-  char input[100];
+  char *input = NULL;
 
   scope_t *scope = make_scope(NULL);
   add_core(scope);
   init_cache();
-  while (1) {
+  while (!feof(stdin)) {
     printf("> ");
-    if (!fgets(input, 99, stdin)) {
-      printf("\n");
-      break;
-    }
-    for (size_t j = 0; input[j] != '\0'; j++) {
-      if (input[j] == '\n') {
-        input[j] = '\0';
-      }
+    input = read(stdin);
+    if (*input == '\0') {
+      free(input);
+      continue;
     }
     if (strcmp(input, ":h") == 0) {
       print_help();
@@ -246,16 +260,19 @@ int main(int argc, char **argv) {
     }
     as_tree_t *tree = parse(input);
     if (tree == NULL) {
+      free(input);
       continue;
     }
     value_t *result = evaluate(tree, scope);
     if (stop) {
+      free(input);
       destroy_value(result);
       destroy_tree(tree, 1, 0);
       break;
     }
     show_value(result);
     printf("\n");
+    free(input);
     destroy_value(result);
     destroy_tree(tree, 1, 0);
   }
