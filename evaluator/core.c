@@ -13,6 +13,11 @@ void set_scope(scope_t *scope) { _scope = scope; }
 scope_t *get_scope() { return _scope; }
 
 value_t *head(value_t **args) {
+  if (args[1] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function head\n");
+    return NULL;
+  }
   if (args[0]->type != LIST) {
     fprintf(
         stderr,
@@ -24,6 +29,11 @@ value_t *head(value_t **args) {
 }
 
 value_t *tail(value_t **args) {
+  if (args[1] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function tail\n");
+    return NULL;
+  }
   if (args[0]->type != LIST) {
     fprintf(
         stderr,
@@ -38,6 +48,11 @@ value_t *tail(value_t **args) {
 }
 
 value_t *cat(value_t **args) {
+  if (args[2] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function cat\n");
+    return NULL;
+  }
   if (args[0]->type != LIST || args[1]->type != LIST) {
     fprintf(
         stderr,
@@ -92,6 +107,11 @@ value_t *isnil(value_t **args) {
 }
 
 value_t *del(value_t **args) {
+  if (args[2] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function del\n");
+    return NULL;
+  }
   if (args[0]->type != LIST) {
     fprintf(
         stderr,
@@ -291,6 +311,11 @@ value_t *land(value_t **args) {
 }
 
 value_t *lnot(value_t **args) {
+  if (args[1] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function lnot\n");
+    return NULL;
+  }
   if (is_nil(args[0])) {
     return make_true();
   }
@@ -298,19 +323,41 @@ value_t *lnot(value_t **args) {
 }
 
 value_t *funcall(value_t **args) {
+  size_t cnt = 0;
+  while (args[cnt] != NULL) {
+    cnt++;
+  }
   switch (args[0]->type) {
     case CORE:
-      value_t *result =
-          search_cache(((core_function_t *)args[0])->name, args + 1);
+      core_function_t *core = (core_function_t *)args[0];
+      if (core->args_cnt > cnt - 1) {
+        fprintf(stderr,
+                "Evaluator error: too few arguments passed to function %s\n",
+                core->name);
+        return NULL;
+      }
+      value_t *result = search_cache(core->name, args + 1);
       if (result == NULL) {
-        result = ((core_function_t *)args[0])->body(args + 1);
-        cache_result(((core_function_t *)args[0])->name, args + 1, result);
+        result = core->body(args + 1);
+        cache_result(core->name, args + 1, result);
       }
       return result;
     case FUNC:
+      function_t *func = (function_t *)args[0];
+      if (func->args_cnt > cnt - 1) {
+        fprintf(stderr,
+                "Evaluator error: Too few arguments passed to function %s\n",
+                func->name);
+        return NULL;
+      }
+      if (func->args_cnt < cnt - 1) {
+        fprintf(stderr,
+                "Evaluator error: Too many arguments passed to function %s\n",
+                func->name);
+        return NULL;
+      }
       scope_t *outer = get_scope();
       scope_t *scope = make_scope(outer);
-      function_t *func = (function_t *)args[0];
       scope->closure = func->closure;
       result = search_cache(func->name, args + 1);
       if (result == NULL) {
@@ -338,6 +385,11 @@ value_t *funcall(value_t **args) {
 }
 
 value_t *mapcar(value_t **args) {
+  if (args[2] != NULL) {
+    fprintf(stderr,
+            "Evaluator error: Too many arguments passed to function mapcar\n");
+    return NULL;
+  }
   if (args[1]->type != LIST) {
     fprintf(stderr,
             "Evaluator error: Type mismatch. The second argument of function "
@@ -352,14 +404,20 @@ value_t *mapcar(value_t **args) {
   list_t *result_start = result;
   switch (args[0]->type) {
     case CORE:
+      core_function_t *core = (core_function_t *)args[0];
+      if (core->args_cnt > 1) {
+        fprintf(stderr,
+                "Evaluator error: the function passed to mapcar must take 1 "
+                "argument\n");
+        free(result);
+        return NULL;
+      }
       while (list != NULL) {
         args[1] = list->data;
-        result->data =
-            search_cache(((core_function_t *)args[0])->name, args + 1);
+        result->data = search_cache(core->name, args + 1);
         if (result->data == NULL) {
-          result->data = ((core_function_t *)args[0])->body(args + 1);
-          cache_result(((core_function_t *)args[0])->name, args + 1,
-                       result->data);
+          result->data = core->body(args + 1);
+          cache_result(core->name, args + 1, result->data);
         }
         if (list->next != NULL) {
           result->next = (list_t *)calloc(1, sizeof(list_t));
@@ -372,6 +430,13 @@ value_t *mapcar(value_t **args) {
       break;
     case FUNC:
       function_t *func = (function_t *)args[0];
+      if (func->args_cnt != 1) {
+        fprintf(stderr,
+                "Evaluator error: the function passed to mapcar must take 1 "
+                "argument\n");
+        free(result);
+        return NULL;
+      }
       scope_t *scope = get_scope();
       value_t **call_args = (value_t **)calloc(2, sizeof(value_t *));
       while (list != NULL) {

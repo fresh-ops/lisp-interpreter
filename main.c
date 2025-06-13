@@ -150,7 +150,7 @@ void add_core(scope_t *scope) {
   *func = (core_function_t){.name = strdup("funcall\0"),
                             .body = funcall,
                             .type = CORE,
-                            .args_cnt = 2};
+                            .args_cnt = 1};
   add_symbol(scope, (value_t *)func);
 
   func = (core_function_t *)calloc(1, sizeof(core_function_t));
