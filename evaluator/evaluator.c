@@ -64,7 +64,7 @@ static value_t *evaluate_core_function(core_function_t *func,
     args[i] = evaluate(&tree->children[i], scope);
     if (args[i] == NULL) {
       for (size_t j = 0; j < i; i++) {
-        free(args[j]);
+        destroy_value(args[j]);
       }
       free(args);
       return NULL;
@@ -79,7 +79,7 @@ static value_t *evaluate_core_function(core_function_t *func,
   }
   set_scope(NULL);
   for (size_t i = 0; i < tree->cnt + 1; i++) {
-    free(args[i]);
+    destroy_value(args[i]);
   }
   free(args);
   return result;
