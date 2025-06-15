@@ -7,9 +7,10 @@
 #include "core.h"
 #include "parser.h"
 
-#define MAX_DEPTH 10000
+#define MAX_DEPTH 50000
 
-static size_t depth = 0;
+static value_t *evaluate_tree(const as_tree_t *tree, scope_t *scope,
+                              size_t depth);
 
 static integer_t *extract_integer(const as_tree_t *tree) {
   char *value = extract_token(tree->token);
@@ -52,7 +53,8 @@ static value_t *evaluate_name(const as_tree_t *tree, scope_t *scope) {
 }
 
 static value_t *evaluate_core_function(core_function_t *func,
-                                       const as_tree_t *tree, scope_t *scope) {
+                                       const as_tree_t *tree, scope_t *scope,
+                                       size_t depth) {
   if (func->args_cnt > tree->cnt) {
     fprintf(stderr,
             "Evaluator error: Too few arguments passed to function %s\n",
@@ -61,7 +63,7 @@ static value_t *evaluate_core_function(core_function_t *func,
   }
   value_t **args = (value_t **)calloc(tree->cnt + 1, sizeof(value_t *));
   for (size_t i = 0; i < tree->cnt; i++) {
-    args[i] = evaluate(&tree->children[i], scope);
+    args[i] = evaluate_tree(&tree->children[i], scope, depth + 1);
     if (args[i] == NULL) {
       for (size_t j = 0; j < i; i++) {
         destroy_value(args[j]);
@@ -85,7 +87,8 @@ static value_t *evaluate_core_function(core_function_t *func,
   return result;
 }
 
-static value_t *create_variable(const as_tree_t *tree, scope_t *scope) {
+static value_t *create_variable(const as_tree_t *tree, scope_t *scope,
+                                size_t depth) {
   if (tree->cnt < 2) {
     fprintf(stderr,
             "Evaluator error: too few parameters passed to operator defvar\n");
@@ -106,10 +109,14 @@ static value_t *create_variable(const as_tree_t *tree, scope_t *scope) {
     return NULL;
   }
 
+  value_t *data = evaluate_tree(&tree->children[1], scope, depth + 1);
+  if (data == NULL) {
+    return NULL;
+  }
   variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
   *var = (variable_t){.type = VAR,
                       .name = extract_token(tree->children[0].token),
-                      .data = evaluate(&tree->children[1], scope)};
+                      .data = data};
   add_symbol(scope, (value_t *)var);
   var = (variable_t *)copy_value((value_t *)var);
   return (value_t *)var;
@@ -192,7 +199,7 @@ static value_t *create_lambda(const as_tree_t *tree, scope_t *scope) {
 }
 
 static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
-                                  scope_t *scope) {
+                                  scope_t *scope, size_t depth) {
   if (func->args_cnt > tree->cnt) {
     fprintf(stderr,
             "Evaluator error: Too few arguments passed to function %s\n",
@@ -210,16 +217,22 @@ static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
   inner->closure = func->closure;
   value_t **args = (value_t **)calloc(func->args_cnt + 1, sizeof(value_t *));
   for (size_t i = 0; i < func->args_cnt; i++) {
+    value_t *data = evaluate_tree(&tree->children[i], inner, depth + 1);
+    if (data == NULL) {
+      free(args);
+      destroy_scope(inner);
+      return NULL;
+    }
     variable_t *var = (variable_t *)calloc(1, sizeof(variable_t));
     *var = (variable_t){.type = VAR,
                         .name = strndup(func->args[i], strlen(func->args[i])),
-                        .data = evaluate(&tree->children[i], inner)};
+                        .data = data};
     args[i] = var->data;
     add_symbol(inner, (value_t *)var);
   }
   value_t *result = search_cache(func->name, args);
   if (result == NULL) {
-    result = evaluate(func->body, inner);
+    result = evaluate_tree(func->body, inner, depth + 1);
     cache_result(func->name, args, result);
   }
   free(args);
@@ -227,7 +240,8 @@ static value_t *evaluate_function(function_t *func, const as_tree_t *tree,
   return result;
 }
 
-static value_t *evaluate_if(const as_tree_t *tree, scope_t *scope) {
+static value_t *evaluate_if(const as_tree_t *tree, scope_t *scope,
+                            size_t depth) {
   if (tree->cnt < 3) {
     fprintf(stderr,
             "Evaluator error: too few parameters passed to operator if\n");
@@ -239,30 +253,31 @@ static value_t *evaluate_if(const as_tree_t *tree, scope_t *scope) {
     return NULL;
   }
 
-  value_t *cond = evaluate(&tree->children[0], scope);
+  value_t *cond = evaluate_tree(&tree->children[0], scope, depth);
   if (cond == NULL) {
     return NULL;
   }
   if (is_nil(cond)) {
     destroy_value(cond);
-    return evaluate(&tree->children[2], scope);
+    return evaluate_tree(&tree->children[2], scope, depth + 1);
   }
   destroy_value(cond);
-  return evaluate(&tree->children[1], scope);
+  return evaluate_tree(&tree->children[1], scope, depth + 1);
 }
 
-static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
+static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope,
+                                    size_t depth) {
   char *name = extract_token(tree->token);
   if (strcmp(name, "if") == 0) {
     free(name);
-    return evaluate_if(tree, scope);
+    return evaluate_if(tree, scope, depth);
   }
   if (strcmp(name, "defun") == 0) {
     free(name);
     return create_function(tree, scope);
   } else if (strcmp(name, "defvar") == 0) {
     free(name);
-    return create_variable(tree, scope);
+    return create_variable(tree, scope, depth);
   } else if (strcmp(name, "lambda") == 0) {
     free(name);
     return create_lambda(tree, scope);
@@ -275,10 +290,11 @@ static value_t *evaluate_expression(const as_tree_t *tree, scope_t *scope) {
   }
   free(name);
   if (symbol->type == CORE) {
-    return evaluate_core_function((core_function_t *)symbol, tree, scope);
+    return evaluate_core_function((core_function_t *)symbol, tree, scope,
+                                  depth + 1);
   }
   if (symbol->type == FUNC) {
-    return evaluate_function((function_t *)symbol, tree, scope);
+    return evaluate_function((function_t *)symbol, tree, scope, depth + 1);
   }
   return NULL;
 }
@@ -332,14 +348,14 @@ value_t *evaluate_reference(const as_tree_t *tree, scope_t *scope) {
   return copy_value(symbol);
 }
 
-value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
-  if (tree == NULL) {
+static value_t *evaluate_tree(const as_tree_t *tree, scope_t *scope,
+                              size_t depth) {
+  if (depth > MAX_DEPTH) {
+    fprintf(stderr, "Evaluator error: maximum recursion depth exit\n");
     return NULL;
   }
-  depth++;
-  if (depth > MAX_DEPTH) {
-    depth = 0;
-    fprintf(stderr, "Evaluator error: Exit maximum recurcion depth\n");
+
+  if (tree == NULL) {
     return NULL;
   }
   value_t *result = NULL;
@@ -350,7 +366,7 @@ value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
     result = evaluate_name(tree, scope);
   }
   if (tree->type == EXPRESSION) {
-    result = evaluate_expression(tree, scope);
+    result = evaluate_expression(tree, scope, depth + 1);
   }
   if (tree->type == QUOTED) {
     result = evaluate_quoted(tree, scope);
@@ -358,8 +374,9 @@ value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
   if (tree->type == REFERENCE) {
     result = evaluate_reference(tree, scope);
   }
-  if (depth > 0) {
-    depth--;
-  }
   return result;
+}
+
+value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
+  return evaluate_tree(tree, scope, 0);
 }
