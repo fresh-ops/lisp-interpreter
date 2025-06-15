@@ -10,7 +10,7 @@ int stop = 0;
 
 void show_value(value_t *value) {
   if (is_nil(value)) {
-    printf("NIL");
+    // printf("NIL");
     return;
   }
   switch (value->type) {
@@ -26,6 +26,9 @@ void show_value(value_t *value) {
       break;
     case FUNC:
       printf("%s", ((function_t *)value)->name);
+      break;
+    case CORE:
+      printf("%s", ((core_function_t *)value)->name);
       break;
     case LIST:
       printf("(");
@@ -270,6 +273,7 @@ int main(int argc, char **argv) {
       destroy_tree(tree, 1, 0);
       break;
     }
+    printf("\r");
     show_value(result);
     printf("\n");
     free(input);
@@ -278,6 +282,6 @@ int main(int argc, char **argv) {
   }
   destroy_scope(scope);
   destroy_cache();
-  printf("Bye.\n");
+  printf("\rBye.\n");
   return 0;
 }
