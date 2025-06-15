@@ -329,27 +329,7 @@ value_t *evaluate_reference(const as_tree_t *tree, scope_t *scope) {
     return NULL;
   }
   free(name);
-  switch (symbol->type) {
-    case CORE:
-      core_function_t *core =
-          (core_function_t *)calloc(1, sizeof(core_function_t));
-      memcpy(core, symbol, sizeof(core_function_t));
-      core->name = strdup(core->name);
-      return (value_t *)core;
-    case FUNC:
-      function_t *func = (function_t *)calloc(1, sizeof(function_t));
-      memcpy(func, symbol, sizeof(function_t));
-      func->name = strdup(((function_t *)symbol)->name);
-      char **args = (char **)calloc(func->args_cnt, sizeof(char *));
-      for (size_t i = 0; i < func->args_cnt; i++) {
-        args[i] = strdup(func->args[i]);
-      }
-      func->args = args;
-      func->body = copy_tree(((function_t *)symbol)->body);
-      return (value_t *)func;
-    default:
-      return NULL;
-  }
+  return copy_value(symbol);
 }
 
 value_t *evaluate(const as_tree_t *tree, scope_t *scope) {
